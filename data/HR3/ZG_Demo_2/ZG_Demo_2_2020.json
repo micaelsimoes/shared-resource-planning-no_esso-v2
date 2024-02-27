@@ -1,0 +1,45 @@
+{
+	"baseMVA": 100.0,
+	"bus": [
+		{"bus_i": 8, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 10, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 9, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 10, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 10, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 10, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 11, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 10, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 12, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 10, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 13, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 10, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 17, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 10, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 18, "type": 3, "Gs": 0, "Bs": 0, "baseKV": 110, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 19, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 0.4, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 20, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 0.4, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 21, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 0.4, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 22, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 0.4, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 23, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 0.4, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 24, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 0.4, "Vmax": 1.1, "Vmin": 0.9}
+	],
+	"gen": [
+		{"gen_id":2,"bus":18,"Pmax":80,"Pmin":-80,"Qmax":80,"Qmin":-80,"Vg":1,"status":1, "type": "REF"},
+		{"gen_id":3,"bus":9,"Pmax":5,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "PV"}
+	],
+	"line": [
+		{"branch_id": 6, "fbus": 8, "tbus": 9, "r": 0.01148, "x": 0.00903, "b": 0.00000413224, "rating": 2.00, "status": 1},
+		{"branch_id": 7, "fbus": 9, "tbus": 10, "r": 0.04428, "x": 0.03483, "b": 0.00001593864, "rating": 4.00, "status": 1},
+		{"branch_id": 8, "fbus": 10, "tbus": 11, "r": 0.026404, "x": 0.020769, "b": 0.000009504152, "rating": 6.00, "status": 1},
+		{"branch_id": 9, "fbus": 11, "tbus": 12, "r": 0.050676, "x": 0.039861, "b": 0.000018240888, "rating": 10.00, "status": 1},
+		{"branch_id": 10, "fbus": 12, "tbus": 13, "r": 0.058548, "x": 0.046053, "b": 0.000021074424, "rating": 10.00, "status": 1},
+		{"branch_id": 11, "fbus": 13, "tbus": 17, "r": 0.493476, "x": 0.388161, "b": 0.000177627288, "rating": 12.00, "status": 1}
+	],
+	"transformer": [
+		{"branch_id": 21, "fbus": 8, "tbus": 24, "r": 1.05, "x": 6, "b": 0, "rating": 2.00, "ratio": 1.025, "status": 1, "vmag_reg": 1},
+		{"branch_id": 22, "fbus": 8, "tbus": 24, "r": 1.05, "x": 6, "b": 0, "rating": 2.00, "ratio": 1.025, "status": 1, "vmag_reg": 1},
+		{"branch_id": 23, "fbus": 9, "tbus": 23, "r": 2.875, "x": 10, "b": 0, "rating": 2.00, "ratio": 1.025, "status": 1, "vmag_reg": 1},
+		{"branch_id": 24, "fbus": 10, "tbus": 22, "r": 1.825, "x": 6.3492, "b": 0, "rating": 2.00, "ratio": 0.97619, "status": 1, "vmag_reg": 1},
+		{"branch_id": 25, "fbus": 11, "tbus": 21, "r": 1.05, "x": 6, "b": 0, "rating": 2.00, "ratio": 1.025, "status": 1, "vmag_reg": 1},
+		{"branch_id": 26, "fbus": 11, "tbus": 21, "r": 1.05, "x": 6, "b": 0, "rating": 2.00, "ratio": 1.025, "status": 1, "vmag_reg": 1},
+		{"branch_id": 27, "fbus": 12, "tbus": 20, "r": 1.05, "x": 6, "b": 0, "rating": 2.00, "ratio": 1.025, "status": 1, "vmag_reg": 1},
+		{"branch_id": 28, "fbus": 12, "tbus": 20, "r": 1.05, "x": 6, "b": 0, "rating": 2.00, "ratio": 1.025, "status": 1, "vmag_reg": 1},
+		{"branch_id": 29, "fbus": 13, "tbus": 19, "r": 1.05, "x": 6, "b": 0, "rating": 2.00, "ratio": 1.025, "status": 1, "vmag_reg": 1},
+		{"branch_id": 30, "fbus": 13, "tbus": 19, "r": 1.05, "x": 6, "b": 0, "rating": 2.00, "ratio": 1.025, "status": 1, "vmag_reg": 1},
+		{"branch_id": 31, "fbus": 18, "tbus": 17, "r": 0.0095, "x": 0.275, "b": 0, "rating": 50.00, "ratio": 1.038, "status": 1, "vmag_reg": 1},
+		{"branch_id": 32, "fbus": 18, "tbus": 17, "r": 0.0095, "x": 0.275, "b": 0, "rating": 50.00, "ratio": 1.038, "status": 1, "vmag_reg": 1}
+	]
+}
