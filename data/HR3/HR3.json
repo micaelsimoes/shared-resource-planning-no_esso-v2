@@ -1,0 +1,38 @@
+{
+	"Years": {
+		"2020": 10,
+		"2030": 10,
+		"2040": 10,
+		"2050": 10
+	},
+	"Days": {
+		"Winter": 183,
+		"Summer": 182
+	},
+	"NumInstants": 24,
+	"DiscountFactor": 0.02,
+	"MarketData": "HR3_market_data",
+	"DistributionNetworks": [
+		{
+			"name": "ZG_Demo_2",
+			"params_file": "ZG_Demo_params.json",
+			"connection_node_id": 7
+		},
+		{
+			"name": "ZG_Demo_1",
+			"params_file": "ZG_Demo_params.json",
+			"connection_node_id": 10
+		}
+	],
+	"TransmissionNetwork": {
+		"name": "Location3",
+		"params_file": "Location3_params.json"
+	},
+	"SharedEnegyStorage":{
+		"params_file": "HR3_ESS_Params.json",
+		"data_file": "HR3_ESS.xlsx"
+	},
+	"PlanningParameters": {
+		"params_file": "HR3_params.json"
+	}
+}
