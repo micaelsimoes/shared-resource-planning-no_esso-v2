@@ -1,0 +1,42 @@
+{
+	"baseMVA": 100.0,
+	"bus": [
+		{"bus_i": 1, "type": 3, "Gs": 0, "Bs": 0, "baseKV": 110, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 2, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 35, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 3, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 35, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 4, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 10, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 5, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 10, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 6, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 10, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 7, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 10, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 25, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 0.4, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 26, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 0.4, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 28, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 0.4, "Vmax": 1.1, "Vmin": 0.9}
+	],
+	"gen": [
+		{"gen_id":1,"bus":1,"Pmax":120,"Pmin":-120,"Qmax":120,"Qmin":-120,"Vg":1,"status":1, "type": "REF"},
+		{"gen_id":3,"bus":7,"Pmax":6,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "PV"},
+		{"gen_id":4,"bus":5,"Pmax":6,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "PV"},
+		{"gen_id":5,"bus":6,"Pmax":6,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "PV"}
+	],
+	"line": [
+		{"branch_id": 1, "fbus": 2, "tbus": 3, "r": 0.054966, "x": 0.0528685, "b": 0.00680021, "rating": 18.46775, "status": 1},
+		{"branch_id": 2, "fbus": 4, "tbus": 5, "r": 0.051496, "x": 0.040506, "b": 0.000018536048, "rating": 16.00, "status": 1},
+		{"branch_id": 3, "fbus": 5, "tbus": 6, "r": 0.0226, "x": 0.021018, "b": 0.0000395500113, "rating": 12.00, "status": 1},
+		{"branch_id": 4, "fbus": 6, "tbus": 7, "r": 0.04428, "x": 0.03483, "b": 0.00001593864, "rating": 6.6605, "status": 1}
+	],
+	"transformer": [
+		{"branch_id": 12, "fbus": 1, "tbus": 2, "r": 0.0095, "x": 0.275, "b": 0, "rating": 40, "ratio": 1.03809, "status": 1, "vmag_reg": 1},
+		{"branch_id": 13, "fbus": 1, "tbus": 2, "r": 0.0095, "x": 0.275, "b": 0, "rating": 40, "ratio": 1.03809, "status": 0, "vmag_reg": 1},
+		{"branch_id": 14, "fbus": 1, "tbus": 2, "r": 0.0095, "x": 0.275, "b": 0, "rating": 40, "ratio": 1.03809, "status": 1, "vmag_reg": 1},
+		{"branch_id": 15, "fbus": 3, "tbus": 4, "r": 0.07875, "x": 0.875, "b": 0, "rating": 12, "ratio": 1, "status": 1, "vmag_reg": 1},
+		{"branch_id": 16, "fbus": 3, "tbus": 4, "r": 0.07875, "x": 0.875, "b": 0, "rating": 12, "ratio": 1, "status": 1, "vmag_reg": 1},
+		{"branch_id": 17, "fbus": 5, "tbus": 28, "r": 1.05, "x": 6, "b": 0, "rating": 2, "ratio": 1.025, "status": 1, "vmag_reg": 1},
+		{"branch_id": 18, "fbus": 6, "tbus": 26, "r": 1.05, "x": 6, "b": 0, "rating": 2, "ratio": 1.025, "status": 1, "vmag_reg": 1},
+		{"branch_id": 19, "fbus": 7, "tbus": 25, "r": 1.05, "x": 6, "b": 0, "rating": 2, "ratio": 1.025, "status": 1, "vmag_reg": 1},
+		{"branch_id": 20, "fbus": 7, "tbus": 25, "r": 1.6667, "x": 6.34, "b": 0, "rating": 1, "ratio": 1.025, "status": 1, "vmag_reg": 1}
+	],
+	"energy_storage": [
+		{"es_id": 1, "bus": 5, "s": 0.50, "e": 1.00, "e_init": 0.50, "e_min": 0.10, "e_max": 0.90, "eff_ch": 0.90, "eff_dch": 0.90, "max_pf": 0.80, "min_pf": 0.80},
+		{"es_id": 2, "bus": 6, "s": 0.50, "e": 1.00, "e_init": 0.50, "e_min": 0.10, "e_max": 0.90, "eff_ch": 0.90, "eff_dch": 0.90, "max_pf": 0.80, "min_pf": 0.80}
+	]
+}
