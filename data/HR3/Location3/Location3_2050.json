@@ -1,0 +1,48 @@
+{
+	"baseMVA": 100.0,
+	"bus": [
+		{"bus_i": 1, "type": 3, "Gs": 0, "Bs": 0, "baseKV": 400, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 2, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 220, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 3, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 220, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 4, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 110, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 5, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 110, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 6, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 110, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 7, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 110, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 8, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 110, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 9, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 110, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 10, "type": 2, "Gs": 0, "Bs": 0, "baseKV": 110, "Vmax": 1.1, "Vmin": 0.9}
+	],
+	"gen": [
+		{"gen_id":1,"bus":1,"Pmax":9999,"Pmin":-9999,"Qmax":9999,"Qmin":-9999,"Vg":1.05185,"status":1, "type": "CONV"},
+		{"gen_id":2,"bus":10,"Pmax":72,"Pmin":30,"Qmax":79,"Qmin":-27,"Vg":1.07,"status":1, "type": "CONV"},
+		{"gen_id":3,"bus":10,"Pmax":78,"Pmin":16,"Qmax":50,"Qmin":-10,"Vg":1.07,"status":1, "type": "CONV"},
+		{"gen_id":4,"bus":10,"Pmax":40,"Pmin":12,"Qmax":19,"Qmin":-34.4,"Vg":1.07,"status":1, "type": "CONV"},
+		{"gen_id":8,"bus":6,"Pmax":75,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.07,"status":1, "type": "WIND"},
+		{"gen_id":9,"bus":2,"Pmax":75,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.07,"status":1, "type": "WIND"},
+		{"gen_id":5,"bus":8,"Pmax":50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.07,"status":1, "type": "PV"},
+		{"gen_id":6,"bus":7,"Pmax":50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.07,"status":1, "type": "PV"},
+		{"gen_id":7,"bus":3,"Pmax":50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.07,"status":1, "type": "PV"}
+	],
+	"line": [
+		{"branch_id": 1, "fbus": 2, "tbus": 3, "r": 0.00436364, "x": 0.0223636, "b": 0.03552, "rating": 311, "status": 1},
+		{"branch_id": 2, "fbus": 4, "tbus": 6, "r": 0.00338843, "x": 0.0114876, "b": 0.00111, "rating": 123, "status": 1},
+		{"branch_id": 3, "fbus": 4, "tbus": 6, "r": 0.00338843, "x": 0.0118182, "b": 0.00112, "rating": 123, "status": 1},
+		{"branch_id": 4, "fbus": 4, "tbus": 8, "r": 0.00300826, "x": 0.0218099, "b": 0.00396, "rating": 300, "status": 1},
+		{"branch_id": 5, "fbus": 4, "tbus": 8, "r": 0.00300826, "x": 0.0218099, "b": 0.00396, "rating": 300, "status": 1},
+		{"branch_id": 6, "fbus": 5, "tbus": 6, "r": 0.021124, "x": 0.0739339, "b": 0.00701, "rating": 123, "status": 1},
+		{"branch_id": 7, "fbus": 5, "tbus": 6, "r": 0.021124, "x": 0.0739339, "b": 0.00701, "rating": 123, "status": 1},
+		{"branch_id": 8, "fbus": 5, "tbus": 10, "r": 0.0137355, "x": 0.0686777, "b": 0.01213, "rating": 230, "status": 1},
+		{"branch_id": 9, "fbus": 6, "tbus": 9, "r": 0.00644628, "x": 0.0220248, "b": 0.00216, "rating": 123, "status": 1},
+		{"branch_id": 10, "fbus": 6, "tbus": 10, "r": 0.00872727, "x": 0.0298182, "b": 0.00289, "rating": 123, "status": 1},
+		{"branch_id": 11, "fbus": 6, "tbus": 10, "r": 0.00872727, "x": 0.0298182, "b": 0.00289, "rating": 123, "status": 1},
+		{"branch_id": 12, "fbus": 7, "tbus": 10, "r": 0.00413223, "x": 0.0206612, "b": 0.00151, "rating": 140, "status": 1},
+		{"branch_id": 13, "fbus": 8, "tbus": 9, "r": 0.00644628, "x": 0.0220248, "b": 0.00216, "rating": 123, "status": 1}
+	],
+	"transformer": [
+		{"branch_id": 14, "fbus": 1, "tbus": 3, "r": 0.00036456, "x": 0.0317479, "b": 0, "rating": 400, "ratio": 0.947619048, "status": 1, "vmag_reg": 1},
+		{"branch_id": 15, "fbus": 1, "tbus": 8, "r": 0.00052633, "x": 0.0407299, "b": 0, "rating": 300, "ratio": 0.99, "status": 1, "vmag_reg": 1},
+		{"branch_id": 16, "fbus": 1, "tbus": 8, "r": 0.00054233, "x": 0.0407964, "b": 0, "rating": 300, "ratio": 0.99, "status": 1, "vmag_reg": 1},
+		{"branch_id": 17, "fbus": 2, "tbus": 5, "r": 0.00154622, "x": 0.070383, "b": 0, "rating": 150, "ratio": 1.02826087, "status": 1, "vmag_reg": 1},
+		{"branch_id": 18, "fbus": 2, "tbus": 5, "r": 0.00164444, "x": 0.0699807, "b": 0, "rating": 150, "ratio": 1.02826087, "status": 1, "vmag_reg": 1}
+	]
+}
