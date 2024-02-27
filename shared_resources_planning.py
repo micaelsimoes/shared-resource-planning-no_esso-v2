@@ -63,6 +63,13 @@ class SharedResourcesPlanning:
             self.write_operational_planning_results_to_excel(models, results, primal_evolution)
         return results, models, sensitivities, primal_evolution
 
+    def run_without_coordination(self, print_results=True):
+        print('[INFO] Running PLANNING PROBLEM WITHOUT COORDINATION...')
+        results, optim_models = _run_operational_planning_without_coordination(self)
+        if print_results:
+            self.write_operational_planning_results_without_coordination_to_excel(optim_models, results)
+        return results, optim_models
+
     def update_admm_consensus_variables(self, tso_model, dso_models, consensus_vars, dual_vars, consensus_vars_prev_iter, params):
         _update_admm_consensus_variables(self, tso_model, dso_models, consensus_vars, dual_vars, consensus_vars_prev_iter, params)
 
@@ -174,6 +181,98 @@ def _run_operational_planning_problem(operational_planning_problem, candidate_so
     sensitivities = transmission_network.get_sensitivities(tso_model, results['tso'])
 
     return results, optim_models, sensitivities, primal_evolution
+
+
+def _run_operational_planning_without_coordination(planning_problem):
+
+    transmission_network = planning_problem.transmission_network
+    distribution_networks = planning_problem.distribution_networks
+    results = {'tso': dict(), 'dso': dict()}
+
+    # Do not consider flexible resources
+    transmission_network.params.fl_reg = False
+    transmission_network.params.es_reg = False
+    transmission_network.params.transf_reg = False
+    transmission_network.params.rg_curt = True
+    transmission_network.params.l_curt = True
+    transmission_network.params.slack_line_limits = True
+    transmission_network.params.slack_voltage_limits = True
+    for node_id in distribution_networks:
+        distribution_network = distribution_networks[node_id]
+        distribution_network.params.fl_reg = False
+        distribution_network.params.es_reg = False
+        distribution_network.params.transf_reg = False
+        distribution_network.params.rg_curt = True
+        distribution_network.params.l_curt = True
+        distribution_network.params.slack_line_limits = True
+        distribution_network.params.slack_voltage_limits = True
+
+    # Shared ESS candidate solution (no hared ESS)
+    candidate_solution = dict()
+    for e in range(len(planning_problem.active_distribution_network_nodes)):
+        node_id = planning_problem.active_distribution_network_nodes[e]
+        candidate_solution[node_id] = dict()
+        for year in planning_problem.years:
+            candidate_solution[node_id][year] = dict()
+            candidate_solution[node_id][year]['s'] = 0.00
+            candidate_solution[node_id][year]['e'] = 0.00
+
+    # Create interface PF variables
+    interface_pf = create_interface_power_flow_variables(planning_problem)
+
+    # Create DSOs' Operational Planning models
+    dso_models = dict()
+    for node_id in distribution_networks:
+
+        distribution_network = distribution_networks[node_id]
+        results['dso'][node_id] = dict()
+
+        # Build model, fix candidate solution, and Run S-MPOPF model
+        dso_model = distribution_network.build_model()
+        distribution_network.update_model_with_candidate_solution(dso_model, candidate_solution)
+        results['dso'][node_id] = distribution_network.optimize(dso_model)
+
+        # Get initial interface PF values
+        for year in distribution_network.years:
+            for day in distribution_network.days:
+                s_base = distribution_network.network[year][day].baseMVA
+                for p in dso_model[year][day].periods:
+                    interface_pf[node_id][year][day]['p'][p] = pe.value(dso_model[year][day].expected_interface_pf_p[p]) * s_base
+                    interface_pf[node_id][year][day]['q'][p] = pe.value(dso_model[year][day].expected_interface_pf_q[p]) * s_base
+
+        dso_models[node_id] = dso_model
+
+    # Create TSO Operational Planning model
+    tso_model = transmission_network.build_model()
+    transmission_network.update_model_with_candidate_solution(tso_model, candidate_solution)
+    for node_id in transmission_network.active_distribution_network_nodes:
+        for year in transmission_network.years:
+            for day in transmission_network.days:
+
+                node_idx = transmission_network.network[year][day].get_node_idx(node_id)
+                s_base = transmission_network.network[year][day].baseMVA
+
+                # - Fix expected interface PF
+                pc = interface_pf[node_id][year][day]['p'][p] / s_base
+                qc = interface_pf[node_id][year][day]['q'][p] / s_base
+                for s_m in tso_model[year][day].scenarios_market:
+                    for s_o in tso_model[year][day].scenarios_operation:
+                        for p in tso_model[year][day].periods:
+                            tso_model[year][day].pc[node_idx, s_m, s_o, p].fix(pc)
+                            tso_model[year][day].qc[node_idx, s_m, s_o, p].fix(qc)
+                            if transmission_network.params.fl_reg:
+                                tso_model[year][day].flex_p_up[node_idx, s_m, s_o, p].fix(0.0)
+                                tso_model[year][day].flex_p_down[node_idx, s_m, s_o, p].fix(0.0)
+
+    results['tso'] = transmission_network.optimize(tso_model)
+    optim_models = {'tso': tso_model, 'dso': dso_models}
+
+    return results, optim_models
+
+
+def create_interface_power_flow_variables(planning_problem):
+    consensus_vars, _, _ = create_admm_variables(planning_problem)
+    return consensus_vars['interface']['pf']['dso']
 
 
 def create_admm_variables(planning_problem):
