@@ -101,6 +101,9 @@ class NetworkData:
     def update_data_with_candidate_solution(self, candidate_solution):
         _update_data_with_candidate_solution(self, candidate_solution)
 
+    def update_model_with_candidate_solution(self, model, candidate_solution):
+        _update_model_with_candidate_solution(self, model, candidate_solution)
+
     def process_results(self, model, results=dict()):
         return _process_results(self, model, results)
 
@@ -1881,3 +1884,30 @@ def _write_shared_network_energy_storage_results_to_excel(network_planning, work
                     sheet.cell(row=row_idx, column=p + 7).value = expected_soc_perc[node_id][p]
                     sheet.cell(row=row_idx, column=p + 7).number_format = perc_style
                 row_idx = row_idx + 1
+
+
+# ======================================================================================================================
+#  OTHER (auxiliary) functions
+# ======================================================================================================================
+def _update_model_with_candidate_solution(network, model, candidate_solution):
+    if network.is_transmission:
+        for year in network.years:
+            for day in network.days:
+                s_base = network.network[year][day].baseMVA
+                for node_id in network.active_distribution_network_nodes:
+                    shared_ess_idx = network.network[year][day].get_shared_energy_storage_idx(node_id)
+                    model[year][day].shared_es_s_rated[shared_ess_idx].fix(abs(candidate_solution[node_id][year]['s']) / s_base)
+                    model[year][day].shared_es_e_rated[shared_ess_idx].fix(abs(candidate_solution[node_id][year]['e']) / s_base)
+                    network.network[year][day].shared_energy_storages[shared_ess_idx].s = candidate_solution[node_id][year]['s'] / s_base
+                    network.network[year][day].shared_energy_storages[shared_ess_idx].e = candidate_solution[node_id][year]['e'] / s_base
+    else:
+        tn_node_id = network.tn_connection_nodeid
+        for year in network.years:
+            for day in network.days:
+                s_base = network.network[year][day].baseMVA
+                ref_node_id = network.network[year][day].get_reference_node_id()
+                shared_ess_idx = network.network[year][day].get_shared_energy_storage_idx(ref_node_id)
+                network.network[year][day].shared_energy_storages[shared_ess_idx].s = candidate_solution[tn_node_id][year]['s'] / s_base
+                network.network[year][day].shared_energy_storages[shared_ess_idx].e = candidate_solution[tn_node_id][year]['e'] / s_base
+                model[year][day].shared_es_s_rated[shared_ess_idx].fix(abs(candidate_solution[tn_node_id][year]['s']) / s_base)
+                model[year][day].shared_es_e_rated[shared_ess_idx].fix(abs(candidate_solution[tn_node_id][year]['e']) / s_base)
