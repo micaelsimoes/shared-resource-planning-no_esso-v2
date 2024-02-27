@@ -14,14 +14,14 @@
 	"MarketData": "HR3_market_data",
 	"DistributionNetworks": [
 		{
-			"name": "ZG_Demo_2",
-			"params_file": "ZG_Demo_params.json",
-			"connection_node_id": 7
-		},
-		{
 			"name": "ZG_Demo_1",
 			"params_file": "ZG_Demo_params.json",
 			"connection_node_id": 10
+		},
+		{
+			"name": "ZG_Demo_2",
+			"params_file": "ZG_Demo_params.json",
+			"connection_node_id": 7
 		}
 	],
 	"TransmissionNetwork": {

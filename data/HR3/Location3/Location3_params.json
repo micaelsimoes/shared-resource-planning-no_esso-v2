@@ -1,0 +1,22 @@
+{
+	"obj_type": "COST",
+	"transf_reg": true,
+	"es_reg": true,
+	"fl_reg": true,
+	"rg_curt": true,
+	"l_curt": false,
+	"ess_relax": false,
+	"fl_relax": false,
+	"enforce_vg": false,
+	"slack_line_limits": true,
+	"slack_voltage_limits": true,
+	"solver": {
+		"name": "ipopt",
+		"linear_solver": "ma57",
+		"solver_tol": 1e-5,
+		"verbose": false
+	},
+	"print_to_screen": false,
+	"plot_diagram": false,
+	"print_results_to_file": false
+}
