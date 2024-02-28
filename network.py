@@ -482,9 +482,15 @@ def _build_model(network, params):
     if network.is_transmission:
         model.expected_shared_ess_p = pe.Var(model.shared_energy_storages, model.periods, domain=pe.Reals, initialize=0.0)
         model.expected_shared_ess_q = pe.Var(model.shared_energy_storages, model.periods, domain=pe.Reals, initialize=0.0)
+        if params.relaxed_model:
+            model.penalty_expected_shared_ess_p = pe.Var(model.shared_energy_storages, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
+            model.penalty_expected_shared_ess_q = pe.Var(model.shared_energy_storages, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
     else:
         model.expected_shared_ess_p = pe.Var(model.periods, domain=pe.Reals, initialize=0.0)
         model.expected_shared_ess_q = pe.Var(model.periods, domain=pe.Reals, initialize=0.0)
+        if params.relaxed_model:
+            model.penalty_expected_shared_ess_p = pe.Var(model.periods, domain=pe.NonNegativeReals, initialize=0.0)
+            model.penalty_expected_shared_ess_q = pe.Var(model.periods, domain=pe.NonNegativeReals, initialize=0.0)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Constraints
@@ -926,10 +932,14 @@ def _build_model(network, params):
                             qdch = model.shared_es_qdch[e, s_m, s_o, p]
                             expected_sess_p += (pch - pdch) * omega_m * omega_o
                             expected_sess_q += (qch - qdch) * omega_m * omega_o
-                    model.expected_shared_ess_power.add(model.expected_shared_ess_p[e, p] - expected_sess_p >= -SMALL_TOLERANCE)
-                    model.expected_shared_ess_power.add(model.expected_shared_ess_p[e, p] - expected_sess_p <= SMALL_TOLERANCE)
-                    model.expected_shared_ess_power.add(model.expected_shared_ess_q[e, p] - expected_sess_q >= -SMALL_TOLERANCE)
-                    model.expected_shared_ess_power.add(model.expected_shared_ess_q[e, p] - expected_sess_q <= SMALL_TOLERANCE)
+                    if not params.relaxed_model:
+                        model.expected_shared_ess_power.add(model.expected_shared_ess_p[e, p] - expected_sess_p >= -SMALL_TOLERANCE)
+                        model.expected_shared_ess_power.add(model.expected_shared_ess_p[e, p] - expected_sess_p <= SMALL_TOLERANCE)
+                        model.expected_shared_ess_power.add(model.expected_shared_ess_q[e, p] - expected_sess_q >= -SMALL_TOLERANCE)
+                        model.expected_shared_ess_power.add(model.expected_shared_ess_q[e, p] - expected_sess_q <= SMALL_TOLERANCE)
+                    else:
+                        model.expected_shared_ess_power.add(model.expected_shared_ess_p[e, p] - expected_sess_p <= model.penalty_expected_shared_ess_p[e, p])
+                        model.expected_shared_ess_power.add(model.expected_shared_ess_q[e, p] - expected_sess_q <= model.penalty_expected_shared_ess_q[e, p])
         else:
             shared_ess_idx = network.get_shared_energy_storage_idx(ref_node_id)
             for p in model.periods:
@@ -945,10 +955,14 @@ def _build_model(network, params):
                         qdch = model.shared_es_qdch[shared_ess_idx, s_m, s_o, p]
                         expected_sess_p += (pch - pdch) * omega_m * omega_s
                         expected_sess_q += (qch - qdch) * omega_m * omega_s
-                model.expected_shared_ess_power.add(model.expected_shared_ess_p[p] - expected_sess_p >= -SMALL_TOLERANCE)
-                model.expected_shared_ess_power.add(model.expected_shared_ess_p[p] - expected_sess_p <= SMALL_TOLERANCE)
-                model.expected_shared_ess_power.add(model.expected_shared_ess_q[p] - expected_sess_q >= -SMALL_TOLERANCE)
-                model.expected_shared_ess_power.add(model.expected_shared_ess_q[p] - expected_sess_q <= SMALL_TOLERANCE)
+                if not params.relaxed_model:
+                    model.expected_shared_ess_power.add(model.expected_shared_ess_p[p] - expected_sess_p >= -SMALL_TOLERANCE)
+                    model.expected_shared_ess_power.add(model.expected_shared_ess_p[p] - expected_sess_p <= SMALL_TOLERANCE)
+                    model.expected_shared_ess_power.add(model.expected_shared_ess_q[p] - expected_sess_q >= -SMALL_TOLERANCE)
+                    model.expected_shared_ess_power.add(model.expected_shared_ess_q[p] - expected_sess_q <= SMALL_TOLERANCE)
+                else:
+                    model.expected_shared_ess_power.add(model.expected_shared_ess_p[p] - expected_sess_p <= model.penalty_expected_shared_ess_p[p])
+                    model.expected_shared_ess_power.add(model.expected_shared_ess_q[p] - expected_sess_q <= model.penalty_expected_shared_ess_q[p])
 
     # ------------------------------------------------------------------------------------------------------------------
     # Objective Function
@@ -1031,6 +1045,15 @@ def _build_model(network, params):
                             obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_vmag[p]
                             obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_p[p]
                             obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_q[p]
+                    if network.is_transmission:                                                                     # Interface PF and Vmag
+                        for dn in model.active_distribution_networks:
+                            for p in model.periods:
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_p[dn, p]
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_q[dn, p]
+                    else:
+                        for p in model.periods:
+                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_p[p]
+                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_q[p]
                     if params.enforce_vg:                                                                           # PV bus set-points
                         for i in model.nodes:
                             for p in model.periods:
@@ -1126,6 +1149,15 @@ def _build_model(network, params):
                             obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_vmag[p]
                             obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_p[p]
                             obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_q[p]
+                    if network.is_transmission:  # Interface PF and Vmag
+                        for dn in model.active_distribution_networks:
+                            for p in model.periods:
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_p[dn, p]
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_q[dn, p]
+                    else:
+                        for p in model.periods:
+                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_p[p]
+                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_q[p]
                     if params.enforce_vg:  # PV bus set-points
                         for i in model.nodes:
                             for p in model.periods:
@@ -1140,10 +1172,8 @@ def _build_model(network, params):
                                 obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_ch[e, s_m, s_o, p]
                                 obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_dch[e, s_m, s_o, p]
                                 obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_soc[e, s_m, s_o, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_comp[
-                                    e, s_m, s_o, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_balance[
-                                    e, s_m, s_o, p]
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_comp[e, s_m, s_o, p]
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_balance[e, s_m, s_o, p]
                         for e in model.shared_energy_storages:  # Shared ESS slacks
                             for p in model.periods:
                                 obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_shared_es_ch[e, s_m, s_o, p]
