@@ -355,10 +355,10 @@ def _build_model(network, params):
                     for p in model.periods:
                         flex_up = node.flexibility.upward[p]
                         flex_down = node.flexibility.downward[p]
-                        model.flex_p_up[i, s_m, s_o, p] = 0.0
-                        model.flex_p_down[i, s_m, s_o, p] = 0.0
                         model.flex_p_up[i, s_m, s_o, p].setub(abs(flex_up))
                         model.flex_p_down[i, s_m, s_o, p].setub(abs(flex_down))
+        if params.fl_relax:
+            model.penalty_flex = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
     if params.l_curt:
         model.pc_curt = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.qc_curt = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
@@ -519,18 +519,20 @@ def _build_model(network, params):
 
     # - Flexible Loads -- Daily energy balance
     if params.fl_reg:
-        if not params.fl_relax:
-            # - FL energy balance added as a strict constraint
-            model.fl_p_balance = pe.ConstraintList()
-            for i in model.nodes:
-                for s_m in model.scenarios_market:
-                    for s_o in model.scenarios_operation:
-                        p_up, p_down = 0.0, 0.0
-                        for p in model.periods:
-                            p_up += model.flex_p_up[i, s_m, s_o, p]
-                            p_down += model.flex_p_down[i, s_m, s_o, p]
-                        model.fl_p_balance.add(p_up - p_down >= -SMALL_TOLERANCE)   # Note: helps with convergence (numerical issues)
-                        model.fl_p_balance.add(p_up - p_down <= SMALL_TOLERANCE)
+
+        model.fl_p_balance = pe.ConstraintList()
+        for i in model.nodes:
+            for s_m in model.scenarios_market:
+                for s_o in model.scenarios_operation:
+                    p_up, p_down = 0.0, 0.0
+                    for p in model.periods:
+                        p_up += model.flex_p_up[i, s_m, s_o, p]
+                        p_down += model.flex_p_down[i, s_m, s_o, p]
+                    if not params.fl_relax:
+                        model.fl_p_balance.add(p_up - p_down >= -SMALL_TOLERANCE)   # FL energy balance added as a strict constraint
+                        model.fl_p_balance.add(p_up - p_down <= SMALL_TOLERANCE)    # - Note: helps with convergence (numerical issues)
+                    else:
+                        model.fl_p_balance.add(p_up - p_down <= model.penalty_flex[i, s_m, s_o, p])
 
     # - Energy Storage constraints
     if params.es_reg:
@@ -945,16 +947,6 @@ def _build_model(network, params):
                             slack_iij_sqr = model.slack_iij_sqr[b, s_m, s_o, p]
                             obj_scenario += COST_SLACK_BRANCH_FLOW * network.baseMVA * slack_iij_sqr
 
-                # Flexible loads energy balance constraint
-                if params.fl_reg:
-                    if params.fl_relax:
-                        for i in model.nodes:
-                            p_up, p_down = 0.0, 0.0
-                            for p in model.periods:
-                                p_up += model.flex_p_up[i, s_m, s_o, p]
-                                p_down += model.flex_p_down[i, s_m, s_o, p]
-                            obj_scenario += COST_FLEX_LOAD_ENERGY_BALANCE_CONS * network.baseMVA * (p_up - p_down)
-
                 # ESS complementarity constraints penalty
                 if params.ess_relax:
                     for e in model.energy_storages:
@@ -968,7 +960,8 @@ def _build_model(network, params):
                 if params.relaxed_model:
                     for i in model.nodes:
                         for p in model.periods:
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_vg[i, s_m, s_o, p]
+                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_vg[i, s_m, s_o, p]        # PV bus set-points
+                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_flex[i, s_m, s_o, p]      # FL loads energy balance
 
                 obj += obj_scenario * omega_market * omega_oper
 
@@ -1021,21 +1014,12 @@ def _build_model(network, params):
                             obj_scenario += PENALTY_LOAD_CURTAILMENT * pc_curt
                             obj_scenario += PENALTY_LOAD_CURTAILMENT * qc_curt
 
-                # Flexible loads energy balance constraint
-                if params.fl_reg:
-                    if params.fl_relax:
-                        for i in model.nodes:
-                            p_up, p_down = 0.0, 0.0
-                            for p in model.periods:
-                                p_up += model.flex_p_up[i, s_m, s_o, p]
-                                p_down += model.flex_p_down[i, s_m, s_o, p]
-                            obj_scenario += PENALTY_FLEX_LOAD_ENERGY_BALANCE_CONS * network.baseMVA * (p_up - p_down)
-
                 # Relaxed model, slacks penalization
                 if params.relaxed_model:
                     for i in model.nodes:
                         for p in model.periods:
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_vg[i, s_m, s_o, p]
+                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_vg[i, s_m, s_o, p]  # PV bus set-points
+                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_flex[i, s_m, s_o, p]  # FL loads energy balance
 
                 obj += obj_scenario * omega_market * omega_oper
 

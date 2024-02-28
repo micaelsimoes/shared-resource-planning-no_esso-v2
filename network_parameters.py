@@ -56,3 +56,6 @@ def _read_network_parameters_from_file(parameters, filename):
     parameters.print_to_screen = params_data['print_to_screen']
     parameters.plot_diagram = params_data['plot_diagram']
     parameters.print_results_to_file = params_data['print_results_to_file']
+    if parameters.relaxed_model:
+        parameters.ess_relax = True     # Note: if "relaxed_model" is active, all constraints are relaxed
+        parameters.fl_relax = True
