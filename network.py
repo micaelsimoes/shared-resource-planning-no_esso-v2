@@ -1850,6 +1850,7 @@ def _process_results(network, model, params, results=dict()):
 
             if params.relaxed_model:
 
+                # Shared ESS
                 for e in model.shared_energy_storages:
                     node_id = network.shared_energy_storages[e].bus
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['ch'][node_id] = []
