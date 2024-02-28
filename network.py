@@ -399,12 +399,6 @@ def _build_model(network, params):
         model.es_sdch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.es_pdch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
         model.es_qdch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
-        if params.ess_relax:
-            model.penalty_es_ch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
-            model.penalty_es_dch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
-            model.penalty_es_soc = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
-            model.penalty_es_comp = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
-            model.penalty_es_balance = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         for e in model.energy_storages:
             energy_storage = network.energy_storages[e]
             for s_m in model.scenarios_market:
@@ -574,14 +568,10 @@ def _build_model(network, params):
                         qdch = model.es_qdch[e, s_m, s_o, p]
 
                         # ESS operation
-                        if not params.ess_relax:
-                            model.energy_storage_operation.add(sch ** 2 - (pch ** 2 + qch ** 2) >= -(1/s_base) * SMALL_TOLERANCE)
-                            model.energy_storage_operation.add(sch ** 2 - (pch ** 2 + qch ** 2) <= (1/s_base) * SMALL_TOLERANCE)
-                            model.energy_storage_operation.add(sdch ** 2 - (pdch ** 2 + qdch ** 2) >= -(1/s_base) * SMALL_TOLERANCE)
-                            model.energy_storage_operation.add(sdch ** 2 - (pdch ** 2 + qdch ** 2) <= (1/s_base) * SMALL_TOLERANCE)
-                        else:
-                            model.energy_storage_operation.add(sch ** 2 - (pch ** 2 + qch ** 2) <= model.penalty_es_ch[e, s_m, s_o, p])
-                            model.energy_storage_operation.add(sdch ** 2 - (pdch ** 2 + qdch ** 2) <= model.penalty_es_dch[e, s_m, s_o, p])
+                        model.energy_storage_operation.add(sch ** 2 - (pch ** 2 + qch ** 2) >= -(1/s_base) * SMALL_TOLERANCE)
+                        model.energy_storage_operation.add(sch ** 2 - (pch ** 2 + qch ** 2) <= (1/s_base) * SMALL_TOLERANCE)
+                        model.energy_storage_operation.add(sdch ** 2 - (pdch ** 2 + qdch ** 2) >= -(1/s_base) * SMALL_TOLERANCE)
+                        model.energy_storage_operation.add(sdch ** 2 - (pdch ** 2 + qdch ** 2) <= (1/s_base) * SMALL_TOLERANCE)
 
                         model.energy_storage_operation.add(qch <= tan(max_phi) * pch)
                         model.energy_storage_operation.add(qch >= tan(min_phi) * pch)
@@ -1007,13 +997,6 @@ def _build_model(network, params):
                 # Relaxed model, slacks penalization
                 if params.relaxed_model:
                     if params.es_reg:                                                                               # ESS slacks
-                        for e in model.energy_storages:
-                            for p in model.periods:
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_ch[e, s_m, s_o, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_dch[e, s_m, s_o, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_soc[e, s_m, s_o, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_comp[e, s_m, s_o, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_balance[e, s_m, s_o, p]
                         for e in model.shared_energy_storages:                                                      # Shared ESS slacks
                             for p in model.periods:
                                 obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_shared_es_ch[e, s_m, s_o, p]
@@ -1099,13 +1082,6 @@ def _build_model(network, params):
                 # Relaxed model, slacks penalization
                 if params.relaxed_model:
                     if params.es_reg:  # ESS slacks
-                        for e in model.energy_storages:
-                            for p in model.periods:
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_ch[e, s_m, s_o, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_dch[e, s_m, s_o, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_soc[e, s_m, s_o, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_comp[e, s_m, s_o, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_balance[e, s_m, s_o, p]
                         for e in model.shared_energy_storages:  # Shared ESS slacks
                             for p in model.periods:
                                 obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_shared_es_ch[e, s_m, s_o, p]
