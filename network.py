@@ -324,8 +324,6 @@ def _build_model(network, params):
     model.iij_sqr = pe.Var(model.branches, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
     if params.slack_line_limits:
         model.slack_iij_sqr = pe.Var(model.branches, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
-    if params.relaxed_model:
-        model.penalty_branch_current = pe.Var(model.branches, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
     for b in model.branches:
         for s_m in model.scenarios_market:
             for s_o in model.scenarios_operation:
@@ -357,8 +355,6 @@ def _build_model(network, params):
                         flex_down = node.flexibility.downward[p]
                         model.flex_p_up[i, s_m, s_o, p].setub(abs(flex_up))
                         model.flex_p_down[i, s_m, s_o, p].setub(abs(flex_down))
-        if params.fl_relax:
-            model.penalty_flex = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
     if params.l_curt:
         model.pc_curt = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.qc_curt = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
@@ -545,11 +541,8 @@ def _build_model(network, params):
                     for p in model.periods:
                         p_up += model.flex_p_up[i, s_m, s_o, p]
                         p_down += model.flex_p_down[i, s_m, s_o, p]
-                    if not params.fl_relax:
-                        model.fl_p_balance.add(p_up - p_down >= -SMALL_TOLERANCE)   # FL energy balance added as a strict constraint
-                        model.fl_p_balance.add(p_up - p_down <= SMALL_TOLERANCE)    # - Note: helps with convergence (numerical issues)
-                    else:
-                        model.fl_p_balance.add(p_up - p_down <= model.penalty_flex[i, s_m, s_o, p])
+                    model.fl_p_balance.add(p_up - p_down >= -SMALL_TOLERANCE)   # FL energy balance added as a strict constraint
+                    model.fl_p_balance.add(p_up - p_down <= SMALL_TOLERANCE)    # - Note: helps with convergence (numerical issues)
 
     # - Energy Storage constraints
     if params.es_reg:
@@ -830,11 +823,8 @@ def _build_model(network, params):
 
                     iij_sqr = (branch.g**2 + branch.b**2) * ((ei - ej)**2 + (fi - fj)**2)
 
-                    if not params.relaxed_model:
-                        model.branch_power_flow_cons.add(model.iij_sqr[b, s_m, s_o, p] - iij_sqr >= -SMALL_TOLERANCE)
-                        model.branch_power_flow_cons.add(model.iij_sqr[b, s_m, s_o, p] - iij_sqr <= SMALL_TOLERANCE)
-                    else:
-                        model.branch_power_flow_cons.add(model.iij_sqr[b, s_m, s_o, p] - iij_sqr <= model.penalty_branch_current[b, s_m, s_o, p])
+                    model.branch_power_flow_cons.add(model.iij_sqr[b, s_m, s_o, p] - iij_sqr >= -SMALL_TOLERANCE)
+                    model.branch_power_flow_cons.add(model.iij_sqr[b, s_m, s_o, p] - iij_sqr <= SMALL_TOLERANCE)
 
                     if params.slack_line_limits:
                         model.branch_power_flow_lims.add(model.iij_sqr[b, s_m, s_o, p] <= rating**2 + model.slack_iij_sqr[b, s_m, s_o, p])
@@ -1016,13 +1006,6 @@ def _build_model(network, params):
 
                 # Relaxed model, slacks penalization
                 if params.relaxed_model:
-                    for b in model.branches:                                                                        # Branch current
-                        for p in model.periods:
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_branch_current[b, s_m, s_o, p]
-                    if params.fl_reg:                                                                               # FL loads energy balance
-                        for i in model.nodes:
-                            for p in model.periods:
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_flex[i, s_m, s_o, p]
                     if params.es_reg:                                                                               # ESS slacks
                         for e in model.energy_storages:
                             for p in model.periods:
@@ -1115,13 +1098,6 @@ def _build_model(network, params):
 
                 # Relaxed model, slacks penalization
                 if params.relaxed_model:
-                    for b in model.branches:  # Branch current
-                        for p in model.periods:
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_branch_current[b, s_m, s_o, p]
-                    if params.fl_reg:  # FL loads energy balance
-                        for i in model.nodes:
-                            for p in model.periods:
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_flex[i, s_m, s_o, p]
                     if params.es_reg:  # ESS slacks
                         for e in model.energy_storages:
                             for p in model.periods:
