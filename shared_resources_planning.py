@@ -1240,6 +1240,7 @@ def _write_operational_planning_results_no_coordination_to_excel(planning_proble
     _write_network_branch_results_to_excel(planning_problem, wb, results, 'current_perc')
     _write_network_branch_power_flow_results_to_excel(planning_problem, wb, results)
     _write_network_energy_storages_results_to_excel(planning_problem, wb, results)
+    _write_relaxation_slacks_results_to_excel(planning_problem, wb, results)
 
     # Save results
     try:
@@ -3439,6 +3440,82 @@ def _write_network_energy_storages_results_per_operator(network, sheet, operator
                     sheet.cell(row=row_idx, column=p + 9).value = expected_soc_percent[node_id][p]
                     sheet.cell(row=row_idx, column=p + 9).number_format = percent_style
                 row_idx = row_idx + 1
+
+    return row_idx
+
+
+def _write_relaxation_slacks_results_to_excel(planning_problem, workbook, results):
+
+    sheet = workbook.create_sheet('Relaxation Slacks')
+
+    row_idx = 1
+
+    # Write Header
+    sheet.cell(row=row_idx, column=1).value = 'Operator'
+    sheet.cell(row=row_idx, column=2).value = 'Connection Node ID'
+    sheet.cell(row=row_idx, column=3).value = 'Network Node ID'
+    sheet.cell(row=row_idx, column=4).value = 'Year'
+    sheet.cell(row=row_idx, column=5).value = 'Day'
+    sheet.cell(row=row_idx, column=6).value = 'Quantity'
+    sheet.cell(row=row_idx, column=7).value = 'Market Scenario'
+    sheet.cell(row=row_idx, column=8).value = 'Operation Scenario'
+    for p in range(planning_problem.num_instants):
+        sheet.cell(row=row_idx, column=p + 9).value = p
+    row_idx = row_idx + 1
+
+    # Write results -- TSO
+    tso_results = results['tso']['results']
+    transmission_network = planning_problem.transmission_network.network
+    row_idx = _write_relaxation_slacks_results_per_operator(transmission_network, sheet, 'TSO', row_idx, tso_results)
+
+    # Write results -- DSOs
+    for tn_node_id in results['dso']:
+        dso_results = results['dso'][tn_node_id]['results']
+        distribution_network = planning_problem.distribution_networks[tn_node_id].network
+        row_idx = _write_network_energy_storages_results_per_operator(distribution_network, sheet, 'DSO', row_idx, dso_results, tn_node_id=tn_node_id)
+
+
+def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type, row_idx, results, tn_node_id='-'):
+
+    decimal_style = '0.00'
+
+    for year in results:
+        for day in results[year]:
+            for s_m in results[year][day]['scenarios']:
+                for s_o in results[year][day]['scenarios'][s_m]:
+
+                    # Shared ESS slacks
+                    for node_id in results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['ch']:
+
+                        # - Charging
+                        sheet.cell(row=row_idx, column=1).value = operator_type
+                        sheet.cell(row=row_idx, column=2).value = tn_node_id
+                        sheet.cell(row=row_idx, column=3).value = node_id
+                        sheet.cell(row=row_idx, column=4).value = int(year)
+                        sheet.cell(row=row_idx, column=5).value = day
+                        sheet.cell(row=row_idx, column=6).value = 'Shared ESS, Charging'
+                        sheet.cell(row=row_idx, column=7).value = s_m
+                        sheet.cell(row=row_idx, column=8).value = s_o
+                        for p in range(network[year][day].num_instants):
+                            slack_shared_es_ch = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['ch'][node_id][p]
+                            sheet.cell(row=row_idx, column=p + 9).value = slack_shared_es_ch
+                            sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
+                        row_idx = row_idx + 1
+
+                        # - Discharging
+                        sheet.cell(row=row_idx, column=1).value = operator_type
+                        sheet.cell(row=row_idx, column=2).value = tn_node_id
+                        sheet.cell(row=row_idx, column=3).value = node_id
+                        sheet.cell(row=row_idx, column=4).value = int(year)
+                        sheet.cell(row=row_idx, column=5).value = day
+                        sheet.cell(row=row_idx, column=6).value = 'Shared ESS, Discharging'
+                        sheet.cell(row=row_idx, column=7).value = s_m
+                        sheet.cell(row=row_idx, column=8).value = s_o
+                        for p in range(network[year][day].num_instants):
+                            slack_shared_es_dch = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['ch'][node_id][p]
+                            sheet.cell(row=row_idx, column=p + 9).value = slack_shared_es_dch
+                            sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
+                        row_idx = row_idx + 1
 
     return row_idx
 

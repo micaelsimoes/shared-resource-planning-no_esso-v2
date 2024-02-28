@@ -1522,7 +1522,6 @@ def _plot_networkx_diagram(network, data_dir='data'):
     plt.savefig(filename, bbox_inches='tight')
 
 
-
 # ======================================================================================================================
 #   NETWORK RESULTS functions
 # ======================================================================================================================
@@ -1579,6 +1578,12 @@ def _process_results(network, model, params, results=dict()):
                 processed_results['scenarios'][s_m][s_o]['energy_storages']['s'] = dict()
                 processed_results['scenarios'][s_m][s_o]['energy_storages']['soc'] = dict()
                 processed_results['scenarios'][s_m][s_o]['energy_storages']['soc_percent'] = dict()
+
+            if params.relaxed_model:
+                processed_results['scenarios'][s_m][s_o]['relaxation_slacks'] = dict()
+                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages'] = dict()
+                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['ch'] = dict()
+                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['dch'] = dict()
 
             # Voltage
             for i in model.nodes:
@@ -1761,6 +1766,17 @@ def _process_results(network, model, params, results=dict()):
                         processed_results['scenarios'][s_m][s_o]['shared_energy_storages']['s'][node_id].append('N/A')
                         processed_results['scenarios'][s_m][s_o]['shared_energy_storages']['soc'][node_id].append('N/A')
                         processed_results['scenarios'][s_m][s_o]['shared_energy_storages']['soc_percent'][node_id].append('N/A')
+
+            if params.relaxed_model:
+                for e in model.shared_energy_storages:
+                    node_id = network.shared_energy_storages[e].bus
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['ch'][node_id] = []
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['dch'][node_id] = []
+                    for p in model.periods:
+                        slack_ch = pe.value(model.penalty_shared_es_ch[e, s_m, s_o, p])
+                        slack_dch = pe.value(model.penalty_shared_es_ch[e, s_m, s_o, p])
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['ch'][node_id].append(slack_ch)
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['dch'][node_id].append(slack_dch)
 
     return processed_results
 
