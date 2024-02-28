@@ -1034,26 +1034,6 @@ def _build_model(network, params):
                     for b in model.branches:                                                                        # Branch current
                         for p in model.periods:
                             obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_branch_current[b, s_m, s_o, p]
-                    if network.is_transmission:                                                                     # Interface PF and Vmag
-                        for dn in model.active_distribution_networks:
-                            for p in model.periods:
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_vmag[dn, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_p[dn, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_q[dn, p]
-                    else:
-                        for p in model.periods:
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_vmag[p]
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_p[p]
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_q[p]
-                    if network.is_transmission:                                                                     # Interface PF and Vmag
-                        for dn in model.active_distribution_networks:
-                            for p in model.periods:
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_p[dn, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_q[dn, p]
-                    else:
-                        for p in model.periods:
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_p[p]
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_q[p]
                     if params.enforce_vg:                                                                           # PV bus set-points
                         for i in model.nodes:
                             for p in model.periods:
@@ -1084,6 +1064,29 @@ def _build_model(network, params):
         for e in model.shared_energy_storages:
             obj += PENALTY_ESS_SLACK * (model.shared_es_s_slack_up[e] + model.shared_es_s_slack_down[e])
             obj += PENALTY_ESS_SLACK * (model.shared_es_e_slack_up[e] + model.shared_es_e_slack_down[e])
+
+        # Relaxed model, slacks penalization
+        if params.relaxed_model:
+            if network.is_transmission:  # Interface PF and Vmag
+                for dn in model.active_distribution_networks:
+                    for p in model.periods:
+                        obj += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_vmag[dn, p]
+                        obj += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_p[dn, p]
+                        obj += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_q[dn, p]
+            else:
+                for p in model.periods:
+                    obj += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_vmag[p]
+                    obj += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_p[p]
+                    obj += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_q[p]
+            if network.is_transmission:  # Interface PF and Vmag
+                for dn in model.active_distribution_networks:
+                    for p in model.periods:
+                        obj += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_p[dn, p]
+                        obj += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_q[dn, p]
+            else:
+                for p in model.periods:
+                    obj += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_p[p]
+                    obj += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_q[p]
 
         model.objective = pe.Objective(sense=pe.minimize, expr=obj)
     elif params.obj_type == OBJ_CONGESTION_MANAGEMENT:
@@ -1138,26 +1141,6 @@ def _build_model(network, params):
                     for b in model.branches:  # Branch current
                         for p in model.periods:
                             obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_branch_current[b, s_m, s_o, p]
-                    if network.is_transmission:  # Interface PF and Vmag
-                        for dn in model.active_distribution_networks:
-                            for p in model.periods:
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_vmag[dn, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_p[dn, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_q[dn, p]
-                    else:
-                        for p in model.periods:
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_vmag[p]
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_p[p]
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_q[p]
-                    if network.is_transmission:  # Interface PF and Vmag
-                        for dn in model.active_distribution_networks:
-                            for p in model.periods:
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_p[dn, p]
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_q[dn, p]
-                    else:
-                        for p in model.periods:
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_p[p]
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_q[p]
                     if params.enforce_vg:  # PV bus set-points
                         for i in model.nodes:
                             for p in model.periods:
@@ -1188,6 +1171,29 @@ def _build_model(network, params):
         for e in model.shared_energy_storages:
             obj += PENALTY_ESS_SLACK * (model.shared_es_s_slack_up[e] + model.shared_es_s_slack_down[e])
             obj += PENALTY_ESS_SLACK * (model.shared_es_e_slack_up[e] + model.shared_es_e_slack_down[e])
+
+        # Relaxed model, slacks penalization
+        if params.relaxed_model:
+            if network.is_transmission:  # Interface PF and Vmag
+                for dn in model.active_distribution_networks:
+                    for p in model.periods:
+                        obj += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_vmag[dn, p]
+                        obj += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_p[dn, p]
+                        obj += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_q[dn, p]
+            else:
+                for p in model.periods:
+                    obj += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_vmag[p]
+                    obj += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_p[p]
+                    obj += PENALTY_RELAXED_MODEL * model.penalty_expected_interface_pf_q[p]
+            if network.is_transmission:  # Interface PF and Vmag
+                for dn in model.active_distribution_networks:
+                    for p in model.periods:
+                        obj += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_p[dn, p]
+                        obj += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_q[dn, p]
+            else:
+                for p in model.periods:
+                    obj += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_p[p]
+                    obj += PENALTY_RELAXED_MODEL * model.penalty_expected_shared_ess_q[p]
 
         model.objective = pe.Objective(sense=pe.minimize, expr=obj)
     else:
