@@ -208,7 +208,6 @@ def _build_model(network, params):
         model.slack_f_up = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
         model.slack_f_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
     if params.relaxed_model:
-        model.penalty_vg = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.penalty_node_balance_p = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.penalty_node_balance_q = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
     for i in model.nodes:
@@ -508,11 +507,8 @@ def _build_model(network, params):
                         for p in model.periods:
                             e = model.e[i, s_m, s_o, p]
                             f = model.f[i, s_m, s_o, p]
-                            if params.relaxed_model:
-                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= model.penalty_vg[i, s_m, s_o, p])
-                            else:
-                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 >= -SMALL_TOLERANCE)
-                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= SMALL_TOLERANCE)
+                            model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 >= -SMALL_TOLERANCE)
+                            model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= SMALL_TOLERANCE)
             else:
                 # - Voltage at the bus is not controlled
                 for s_m in model.scenarios_market:
@@ -1034,10 +1030,6 @@ def _build_model(network, params):
                     for b in model.branches:                                                                        # Branch current
                         for p in model.periods:
                             obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_branch_current[b, s_m, s_o, p]
-                    if params.enforce_vg:                                                                           # PV bus set-points
-                        for i in model.nodes:
-                            for p in model.periods:
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_vg[i, s_m, s_o, p]
                     if params.fl_reg:                                                                               # FL loads energy balance
                         for i in model.nodes:
                             for p in model.periods:
@@ -1141,10 +1133,6 @@ def _build_model(network, params):
                     for b in model.branches:  # Branch current
                         for p in model.periods:
                             obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_branch_current[b, s_m, s_o, p]
-                    if params.enforce_vg:  # PV bus set-points
-                        for i in model.nodes:
-                            for p in model.periods:
-                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_vg[i, s_m, s_o, p]
                     if params.fl_reg:  # FL loads energy balance
                         for i in model.nodes:
                             for p in model.periods:
