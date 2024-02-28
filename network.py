@@ -207,6 +207,8 @@ def _build_model(network, params):
         model.slack_e_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
         model.slack_f_up = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
         model.slack_f_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
+    if params.relaxed_model:
+        model.penalty_vg = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
     for i in model.nodes:
         node = network.nodes[i]
         e_lb, e_ub = -node.v_max, node.v_max
@@ -482,8 +484,11 @@ def _build_model(network, params):
                         for p in model.periods:
                             e = model.e[i, s_m, s_o, p]
                             f = model.f[i, s_m, s_o, p]
-                            model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 >= -SMALL_TOLERANCE)
-                            model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= SMALL_TOLERANCE)
+                            if params.relaxed_model:
+                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= model.penalty_vg[i, s_m, s_o, p])
+                            else:
+                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 >= -SMALL_TOLERANCE)
+                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= SMALL_TOLERANCE)
             else:
                 # - Voltage at the bus is not controlled
                 for s_m in model.scenarios_market:
@@ -959,6 +964,12 @@ def _build_model(network, params):
                         for p in model.periods:
                             obj_scenario += PENALTY_ESS_COMPLEMENTARITY * model.shared_es_penalty[e, s_m, s_o, p]
 
+                # Relaxed model, slacks penalization
+                if params.relaxed_model:
+                    for i in model.nodes:
+                        for p in model.periods:
+                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_vg[i, s_m, s_o, p]
+
                 obj += obj_scenario * omega_market * omega_oper
 
         # ESS Planning -- Slack Penalty
@@ -1019,6 +1030,12 @@ def _build_model(network, params):
                                 p_up += model.flex_p_up[i, s_m, s_o, p]
                                 p_down += model.flex_p_down[i, s_m, s_o, p]
                             obj_scenario += PENALTY_FLEX_LOAD_ENERGY_BALANCE_CONS * network.baseMVA * (p_up - p_down)
+
+                # Relaxed model, slacks penalization
+                if params.relaxed_model:
+                    for i in model.nodes:
+                        for p in model.periods:
+                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_vg[i, s_m, s_o, p]
 
                 obj += obj_scenario * omega_market * omega_oper
 
