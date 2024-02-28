@@ -1696,6 +1696,8 @@ def _process_results(network, model, params, results=dict()):
                 processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['soc'] = dict()
                 processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['comp'] = dict()
                 processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['day_balance'] = dict()
+                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['expected_p'] = dict()
+                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['expected_q'] = dict()
                 processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface'] = dict()
                 processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['pf_p'] = dict()
                 processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['pf_q'] = dict()
@@ -1917,11 +1919,22 @@ def _process_results(network, model, params, results=dict()):
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['pf_p'][node_id].append(slack_p)
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['pf_q'][node_id].append(slack_q)
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['vmag_sqr'][node_id].append(slack_vmag_sqr)
+                    for e in model.shared_energy_storages:
+                        node_id = network.shared_energy_storages[e].bus
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['expected_p'][node_id] = []
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['expected_q'][node_id] = []
+                        for p in model.periods:
+                            slack_expected_p = pe.value(model.penalty_expected_shared_ess_p[e, p])
+                            slack_expected_q = pe.value(model.penalty_expected_shared_ess_q[e, p])
+                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['expected_p'][node_id].append(slack_expected_p)
+                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['expected_q'][node_id].append(slack_expected_q)
                 else:
                     node_id = network.get_reference_node_id()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['pf_p'][node_id] = []
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['pf_q'][node_id] = []
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['vmag_sqr'][node_id] = []
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['expected_p'][node_id] = []
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['expected_q'][node_id] = []
                     for p in model.periods:
                         slack_p = pe.value(model.penalty_expected_interface_pf_p[p])
                         slack_q = pe.value(model.penalty_expected_interface_pf_q[p])
@@ -1929,6 +1942,11 @@ def _process_results(network, model, params, results=dict()):
                         processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['pf_p'][node_id].append(slack_p)
                         processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['pf_q'][node_id].append(slack_q)
                         processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['vmag_sqr'][node_id].append(slack_vmag_sqr)
+                    for p in model.periods:
+                        slack_expected_p = pe.value(model.penalty_expected_shared_ess_p[p])
+                        slack_expected_q = pe.value(model.penalty_expected_shared_ess_q[p])
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['expected_p'][node_id].append(slack_expected_p)
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['expected_q'][node_id].append(slack_expected_q)
 
     return processed_results
 
