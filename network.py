@@ -207,9 +207,6 @@ def _build_model(network, params):
         model.slack_e_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
         model.slack_f_up = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
         model.slack_f_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
-    if params.relaxed_model:
-        model.penalty_node_balance_p = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
-        model.penalty_node_balance_q = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
     for i in model.nodes:
         node = network.nodes[i]
         e_lb, e_ub = -node.v_max, node.v_max
@@ -801,14 +798,10 @@ def _build_model(network, params):
                                 Qi -= (branch.b + branch.b_sh * 0.5) * (ei ** 2 + fi ** 2)
                                 Qi += rij * (branch.b * (ei * ej + fi * fj) - branch.g * (fi * ej - ei * fj))
 
-                    if not params.relaxed_model:
-                        model.node_balance_cons_p.add(Pg - Pd - Pi >= -SMALL_TOLERANCE)
-                        model.node_balance_cons_p.add(Pg - Pd - Pi <= SMALL_TOLERANCE)
-                        model.node_balance_cons_q.add(Qg - Qd - Qi >= -SMALL_TOLERANCE)
-                        model.node_balance_cons_q.add(Qg - Qd - Qi <= SMALL_TOLERANCE)
-                    else:
-                        model.node_balance_cons_p.add(Pg - Pd - Pi <= model.penalty_node_balance_p[i, s_m, s_o, p])
-                        model.node_balance_cons_q.add(Qg - Qd - Qi <= model.penalty_node_balance_q[i, s_m, s_o, p])
+                    model.node_balance_cons_p.add(Pg - Pd - Pi >= -SMALL_TOLERANCE)
+                    model.node_balance_cons_p.add(Pg - Pd - Pi <= SMALL_TOLERANCE)
+                    model.node_balance_cons_q.add(Qg - Qd - Qi >= -SMALL_TOLERANCE)
+                    model.node_balance_cons_q.add(Qg - Qd - Qi <= SMALL_TOLERANCE)
 
     # - Branch Power Flow constraints (current)
     model.branch_power_flow_cons = pe.ConstraintList()
@@ -1023,10 +1016,6 @@ def _build_model(network, params):
 
                 # Relaxed model, slacks penalization
                 if params.relaxed_model:
-                    for i in model.nodes:                                                                           # Node balance
-                        for p in model.periods:
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_node_balance_p[i, s_m, s_o, p]
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_node_balance_q[i, s_m, s_o, p]
                     for b in model.branches:                                                                        # Branch current
                         for p in model.periods:
                             obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_branch_current[b, s_m, s_o, p]
@@ -1126,10 +1115,6 @@ def _build_model(network, params):
 
                 # Relaxed model, slacks penalization
                 if params.relaxed_model:
-                    for i in model.nodes:  # Node balance
-                        for p in model.periods:
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_node_balance_p[i, s_m, s_o, p]
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_node_balance_q[i, s_m, s_o, p]
                     for b in model.branches:  # Branch current
                         for p in model.periods:
                             obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_branch_current[b, s_m, s_o, p]
