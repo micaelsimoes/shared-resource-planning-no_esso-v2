@@ -976,9 +976,9 @@ def _build_model(network, params):
                             penalty_dch = model.penalty_shared_es_ch[e, s_m, s_o, p]
                             penalty_soc = model.penalty_shared_es_soc[e, s_m, s_o, p]
                             penalty_comp = model.penalty_shared_es_comp[e, s_m, s_o, p]
-                            obj_scenario += COST_SLACK_BRANCH_FLOW * network.baseMVA * (penalty_ch + penalty_dch + penalty_soc + penalty_comp)
+                            obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_ch + penalty_dch + penalty_soc + penalty_comp)
                         penalty_day_balance = model.penalty_shared_es_soc_day_balance[e, s_m, s_o]
-                        obj_scenario += COST_SLACK_BRANCH_FLOW * network.baseMVA * penalty_day_balance
+                        obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
 
                     # - Interface PF and Vmag
                     if network.is_transmission:
@@ -987,13 +987,13 @@ def _build_model(network, params):
                                 penalty_vmag_sqr = model.penalty_expected_interface_vmag_sqr[dn, p]
                                 penalty_pf_p = model.penalty_expected_interface_pf_p[dn, p]
                                 penalty_pf_q = model.penalty_expected_interface_pf_q[dn, p]
-                                obj_scenario += COST_SLACK_BRANCH_FLOW * network.baseMVA * (penalty_vmag_sqr + penalty_pf_p + penalty_pf_q)
+                                obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_vmag_sqr + penalty_pf_p + penalty_pf_q)
                     else:
                         for p in model.periods:
                             penalty_vmag_sqr = model.penalty_expected_interface_vmag_sqr[p]
                             penalty_pf_p = model.penalty_expected_interface_pf_p[p]
                             penalty_pf_q = model.penalty_expected_interface_pf_q[p]
-                            obj_scenario += COST_SLACK_BRANCH_FLOW * network.baseMVA * (penalty_vmag_sqr + penalty_pf_p + penalty_pf_q)
+                            obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_vmag_sqr + penalty_pf_p + penalty_pf_q)
 
                 obj += obj_scenario * omega_market * omega_oper
 
@@ -1056,9 +1056,9 @@ def _build_model(network, params):
                             penalty_dch = model.penalty_shared_es_ch[e, s_m, s_o, p]
                             penalty_soc = model.penalty_shared_es_soc[e, s_m, s_o, p]
                             penalty_comp = model.penalty_shared_es_comp[e, s_m, s_o, p]
-                            obj_scenario += COST_SLACK_BRANCH_FLOW * network.baseMVA * (penalty_ch + penalty_dch + penalty_soc + penalty_comp)
+                            obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_ch + penalty_dch + penalty_soc + penalty_comp)
                         penalty_day_balance = model.penalty_shared_es_soc_day_balance[e, s_m, s_o]
-                        obj_scenario += COST_SLACK_BRANCH_FLOW * network.baseMVA * penalty_day_balance
+                        obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
 
                     # - Interface PF and Vmag
                     if network.is_transmission:
@@ -1067,13 +1067,13 @@ def _build_model(network, params):
                                 penalty_vmag_sqr = model.penalty_expected_interface_vmag_sqr[dn, p]
                                 penalty_pf_p = model.penalty_expected_interface_pf_p[dn, p]
                                 penalty_pf_q = model.penalty_expected_interface_pf_q[dn, p]
-                                obj_scenario += COST_SLACK_BRANCH_FLOW * network.baseMVA * (penalty_vmag_sqr + penalty_pf_p + penalty_pf_q)
+                                obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_vmag_sqr + penalty_pf_p + penalty_pf_q)
                     else:
                         for p in model.periods:
                             penalty_vmag_sqr = model.penalty_expected_interface_vmag_sqr[p]
                             penalty_pf_p = model.penalty_expected_interface_pf_p[p]
                             penalty_pf_q = model.penalty_expected_interface_pf_q[p]
-                            obj_scenario += COST_SLACK_BRANCH_FLOW * network.baseMVA * (penalty_vmag_sqr + penalty_pf_p + penalty_pf_q)
+                            obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_vmag_sqr + penalty_pf_p + penalty_pf_q)
 
                 obj += obj_scenario * omega_market * omega_oper
 
