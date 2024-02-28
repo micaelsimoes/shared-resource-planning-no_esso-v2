@@ -328,6 +328,8 @@ def _build_model(network, params):
     model.iij_sqr = pe.Var(model.branches, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
     if params.slack_line_limits:
         model.slack_iij_sqr = pe.Var(model.branches, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
+    if params.relaxed_model:
+        model.penalty_branch_current = pe.Var(model.branches, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
     for b in model.branches:
         for s_m in model.scenarios_market:
             for s_o in model.scenarios_operation:
@@ -824,8 +826,12 @@ def _build_model(network, params):
                         fj += model.slack_f_up[tnode_idx, s_m, s_o, p] - model.slack_f_down[tnode_idx, s_m, s_o, p]
 
                     iij_sqr = (branch.g**2 + branch.b**2) * ((ei - ej)**2 + (fi - fj)**2)
-                    model.branch_power_flow_cons.add(model.iij_sqr[b, s_m, s_o, p] - iij_sqr >= -SMALL_TOLERANCE)
-                    model.branch_power_flow_cons.add(model.iij_sqr[b, s_m, s_o, p] - iij_sqr <= SMALL_TOLERANCE)
+
+                    if not params.relaxed_model:
+                        model.branch_power_flow_cons.add(model.iij_sqr[b, s_m, s_o, p] - iij_sqr >= -SMALL_TOLERANCE)
+                        model.branch_power_flow_cons.add(model.iij_sqr[b, s_m, s_o, p] - iij_sqr <= SMALL_TOLERANCE)
+                    else:
+                        model.branch_power_flow_cons.add(model.iij_sqr[b, s_m, s_o, p] - iij_sqr <= model.penalty_branch_current[b, s_m, s_o, p])
 
                     if params.slack_line_limits:
                         model.branch_power_flow_lims.add(model.iij_sqr[b, s_m, s_o, p] <= rating**2 + model.slack_iij_sqr[b, s_m, s_o, p])
@@ -991,6 +997,9 @@ def _build_model(network, params):
                         for p in model.periods:
                             obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_node_balance_p[i, s_m, s_o, p]
                             obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_node_balance_q[i, s_m, s_o, p]
+                    for b in model.branches:                                                                        # Branch current
+                        for p in model.periods:
+                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_branch_current[i, s_m, s_o, p]
                     if params.enforce_vg:                                                                           # PV bus set-points
                         for i in model.nodes:
                             for p in model.periods:
