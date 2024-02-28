@@ -594,12 +594,12 @@ def _build_model(network, params):
                                 model.energy_storage_balance.add(model.es_soc[e, s_m, s_o, p] - soc_init - (sch * eff_charge - sdch / eff_discharge) <= model.penalty_es_soc[e, s_m, s_o, p])
 
                         # Charging/discharging complementarity constraints
-                        if params.ess_relax:
-                            model.energy_storage_ch_dch_exclusion.add(sch * sdch <= model.penalty_es_comp[e, s_m, s_o, p])
-                        else:
+                        if not params.ess_relax:
                             # NLP formulation
-                            model.energy_storage_ch_dch_exclusion.add(sch * sdch >= -(1/s_base**2) * SMALL_TOLERANCE)   # Note: helps with convergence
-                            model.energy_storage_ch_dch_exclusion.add(sch * sdch <= (1/s_base**2) * SMALL_TOLERANCE)
+                            model.energy_storage_ch_dch_exclusion.add(sch * sdch >= -(1 / s_base ** 2) * SMALL_TOLERANCE)  # Note: helps with convergence
+                            model.energy_storage_ch_dch_exclusion.add(sch * sdch <= (1 / s_base ** 2) * SMALL_TOLERANCE)
+                        else:
+                            model.energy_storage_ch_dch_exclusion.add(sch * sdch <= model.penalty_es_comp[e, s_m, s_o, p])
 
                     if not params.ess_relax:
                         model.energy_storage_day_balance.add(model.es_soc[e, s_m, s_o, len(model.periods) - 1] - soc_final >= -SMALL_TOLERANCE)
@@ -969,16 +969,21 @@ def _build_model(network, params):
 
                 # Relaxed model, slacks penalization
                 if params.relaxed_model:
-                    for i in model.nodes:
-                        for p in model.periods:
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_vg[i, s_m, s_o, p]            # PV bus set-points
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_flex[i, s_m, s_o, p]          # FL loads energy balance
-                    for e in model.energy_storages:
-                        for p in model.periods:
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_ch[e, s_m, s_o, p]         # ESS apparent power (charging)
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_dch[e, s_m, s_o, p]        # ESS apparent power (discharging)
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_comp[e, s_m, s_o, p]       # ESS charging/discharging complementarity
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_balance[e, s_m, s_o, p]    # ESS daily energy balance
+                    if params.enforce_vg:                                                                           # PV bus set-points
+                        for i in model.nodes:
+                            for p in model.periods:
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_vg[i, s_m, s_o, p]
+                    if params.fl_reg:                                                                               # FL loads energy balance
+                        for i in model.nodes:
+                            for p in model.periods:
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_flex[i, s_m, s_o, p]
+                    if params.es_reg:                                                                               # ESS slacks
+                        for e in model.energy_storages:
+                            for p in model.periods:
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_ch[e, s_m, s_o, p]         # - apparent power (charging)
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_dch[e, s_m, s_o, p]        # - apparent power (discharging)
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_comp[e, s_m, s_o, p]       # - charging/discharging complementarity
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_balance[e, s_m, s_o, p]    # - daily energy balance
 
                 obj += obj_scenario * omega_market * omega_oper
 
@@ -1033,16 +1038,21 @@ def _build_model(network, params):
 
                 # Relaxed model, slacks penalization
                 if params.relaxed_model:
-                    for i in model.nodes:
-                        for p in model.periods:
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_vg[i, s_m, s_o, p]  # PV bus set-points
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_flex[i, s_m, s_o, p]  # FL loads energy balance
-                    for e in model.energy_storages:
-                        for p in model.periods:
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_ch[e, s_m, s_o, p]  # ESS apparent power (charging)
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_dch[e, s_m, s_o, p]  # ESS apparent power (discharging)
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_comp[e, s_m, s_o, p]  # ESS charging/discharging complementarity
-                            obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_balance[e, s_m, s_o, p]  # ESS daily energy balance
+                    if params.enforce_vg:  # PV bus set-points
+                        for i in model.nodes:
+                            for p in model.periods:
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_vg[i, s_m, s_o, p]
+                    if params.fl_reg:  # FL loads energy balance
+                        for i in model.nodes:
+                            for p in model.periods:
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_flex[i, s_m, s_o, p]
+                    if params.es_reg:  # ESS slacks
+                        for e in model.energy_storages:
+                            for p in model.periods:
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_ch[e, s_m, s_o, p]  # - apparent power (charging)
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_dch[e, s_m, s_o, p]  # - apparent power (discharging)
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_comp[e, s_m, s_o, p]  # - charging/discharging complementarity
+                                obj_scenario += PENALTY_RELAXED_MODEL * model.penalty_es_balance[e, s_m, s_o, p]  # - daily energy balance
 
                 obj += obj_scenario * omega_market * omega_oper
 
