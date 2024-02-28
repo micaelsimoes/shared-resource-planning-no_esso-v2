@@ -3547,6 +3547,26 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                             sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                         row_idx = row_idx + 1
 
+            # Shared ESS slacks
+            for node_id in results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['day_balance']:
+
+                # - Day balance
+                sheet.cell(row=row_idx, column=1).value = operator_type
+                sheet.cell(row=row_idx, column=2).value = tn_node_id
+                sheet.cell(row=row_idx, column=3).value = node_id
+                sheet.cell(row=row_idx, column=4).value = int(year)
+                sheet.cell(row=row_idx, column=5).value = day
+                sheet.cell(row=row_idx, column=6).value = 'Shared ESS, Day Balance'
+                sheet.cell(row=row_idx, column=7).value = s_m
+                sheet.cell(row=row_idx, column=8).value = s_o
+                for p in range(network[year][day].num_instants):
+                    if p == network[year][day].num_instants - 1:
+                        slack_shared_es_day_balance = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['day_balance'][node_id]
+                        sheet.cell(row=row_idx, column=p + 9).value = slack_shared_es_day_balance
+                        sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
+                    else:
+                        sheet.cell(row=row_idx, column=p + 9).value = 'N/A'
+                row_idx = row_idx + 1
     return row_idx
 
 
