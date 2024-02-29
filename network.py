@@ -1770,6 +1770,8 @@ def _process_results(network, model, params, results=dict()):
                 processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['soc'] = dict()
                 processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['comp'] = dict()
                 processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['day_balance'] = dict()
+                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes'] = dict()
+                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes']['gen_vg'] = dict()
 
             # Voltage
             for i in model.nodes:
@@ -2033,6 +2035,14 @@ def _process_results(network, model, params, results=dict()):
                         processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['dch'][node_id].append(slack_dch)
                         processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['soc'][node_id].append(slack_soc)
                         processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['comp'][node_id].append(slack_comp)
+
+                # PV bus voltage set-point
+                for i in model.nodes:
+                    node_id = network.nodes[i].bus_i
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes']['gen_vg'][node_id] = []
+                    for p in model.periods:
+                        slack_vg = pe.value(model.penalty_gen_vg[i, s_m, s_o, p])
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes']['gen_vg'][node_id].append(slack_vg)
 
     return processed_results
 
