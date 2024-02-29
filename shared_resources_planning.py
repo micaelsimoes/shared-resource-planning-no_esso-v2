@@ -671,7 +671,7 @@ def update_transmission_coordination_model_and_solve(transmission_network, model
                     model[year][day].q_ess_req[shared_ess_idx, p].fix(ess_req[node_id][year][day]['q'][p] / s_base)
 
     # Solve!
-    res = transmission_network.optimize(model, from_warm_start=True)
+    res = transmission_network.optimize(model, from_warm_start=False)
     for year in transmission_network.years:
         for day in transmission_network.days:
             if res[year][day].solver.status == po.SolverStatus.error:
@@ -840,7 +840,7 @@ def update_distribution_coordination_models_and_solve(distribution_networks, mod
                     model[year][day].q_ess_req[p].fix(ess_req[node_id][year][day]['q'][p] / s_base)
 
         # Solve!
-        res[node_id] = distribution_network.optimize(model, from_warm_start=True)
+        res[node_id] = distribution_network.optimize(model, from_warm_start=False)
         for year in distribution_network.years:
             for day in distribution_network.days:
                 if res[node_id][year][day].solver.status == po.SolverStatus.error:
