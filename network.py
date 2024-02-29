@@ -872,7 +872,10 @@ def _build_model(network, params):
                 else:
                     model.expected_interface_pf.add(model.expected_interface_pf_p[dn, p] - expected_pf_p <= model.penalty_expected_interface_pf_p[dn, p])
                     model.expected_interface_pf.add(model.expected_interface_pf_q[dn, p] - expected_pf_q <= model.penalty_expected_interface_pf_q[dn, p])
-                    model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[dn, p] - expected_vmag_sqr <= model.penalty_expected_interface_vmag_sqr[dn, p])
+                    #model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[dn, p] - expected_vmag_sqr <= model.penalty_expected_interface_vmag_sqr[dn, p])
+
+                model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[dn, p] - expected_vmag_sqr >= -SMALL_TOLERANCE)
+                model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[dn, p] - expected_vmag_sqr <= SMALL_TOLERANCE)
     else:
         ref_node_idx = network.get_node_idx(ref_node_id)
         ref_gen_idx = network.get_reference_gen_idx()
@@ -898,7 +901,9 @@ def _build_model(network, params):
             else:
                 model.expected_interface_pf.add(model.expected_interface_pf_p[p] - expected_pf_p <= model.penalty_expected_interface_pf_p[p])
                 model.expected_interface_pf.add(model.expected_interface_pf_q[p] - expected_pf_q <= model.penalty_expected_interface_pf_q[p])
-                model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[p] - expected_vmag_sqr <= model.penalty_expected_interface_vmag_sqr[p])
+                #model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[p] - expected_vmag_sqr <= model.penalty_expected_interface_vmag_sqr[p])
+            model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[p] - expected_vmag_sqr >= -SMALL_TOLERANCE)
+            model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[p] - expected_vmag_sqr <= SMALL_TOLERANCE)
 
     # - Expected Shared ESS Power (explicit definition)
     if len(network.shared_energy_storages) > 0:
@@ -1065,7 +1070,7 @@ def _build_model(network, params):
             if network.is_transmission:
                 for dn in model.active_distribution_networks:
                     for p in model.periods:
-                        penalty_vmag_sqr = 1e3 * model.penalty_expected_interface_vmag_sqr[dn, p]
+                        penalty_vmag_sqr = model.penalty_expected_interface_vmag_sqr[dn, p]
                         penalty_pf_p = model.penalty_expected_interface_pf_p[dn, p]
                         penalty_pf_q = model.penalty_expected_interface_pf_q[dn, p]
                         obj += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_vmag_sqr + penalty_pf_p + penalty_pf_q)
@@ -1076,7 +1081,7 @@ def _build_model(network, params):
                         obj += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_sess_p + penalty_sess_q)
             else:
                 for p in model.periods:
-                    penalty_vmag_sqr = 1e3 * model.penalty_expected_interface_vmag_sqr[p]
+                    penalty_vmag_sqr = model.penalty_expected_interface_vmag_sqr[p]
                     penalty_pf_p = model.penalty_expected_interface_pf_p[p]
                     penalty_pf_q = model.penalty_expected_interface_pf_q[p]
                     obj += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_vmag_sqr + penalty_pf_p + penalty_pf_q)
@@ -1183,7 +1188,7 @@ def _build_model(network, params):
             if network.is_transmission:
                 for dn in model.active_distribution_networks:
                     for p in model.periods:
-                        penalty_vmag_sqr = 1e3 * model.penalty_expected_interface_vmag_sqr[dn, p]
+                        penalty_vmag_sqr = model.penalty_expected_interface_vmag_sqr[dn, p]
                         penalty_pf_p = model.penalty_expected_interface_pf_p[dn, p]
                         penalty_pf_q = model.penalty_expected_interface_pf_q[dn, p]
                         obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_vmag_sqr + penalty_pf_p + penalty_pf_q)
@@ -1194,7 +1199,7 @@ def _build_model(network, params):
                         obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_sess_p + penalty_sess_q)
             else:
                 for p in model.periods:
-                    penalty_vmag_sqr =  1e3 * model.penalty_expected_interface_vmag_sqr[p]
+                    penalty_vmag_sqr = model.penalty_expected_interface_vmag_sqr[p]
                     penalty_pf_p = model.penalty_expected_interface_pf_p[p]
                     penalty_pf_q = model.penalty_expected_interface_pf_q[p]
                     obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_vmag_sqr + penalty_pf_p + penalty_pf_q)
