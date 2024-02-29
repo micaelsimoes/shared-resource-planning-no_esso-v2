@@ -209,6 +209,7 @@ def _build_model(network, params):
         model.slack_f_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
     if params.relaxed_model:
         model.penalty_gen_vg = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
+        model.penalty_flex_day_balance = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, domain=pe.NonNegativeReals, initialize=0.00)
     for i in model.nodes:
         node = network.nodes[i]
         e_lb, e_ub = -node.v_max, node.v_max
@@ -545,8 +546,11 @@ def _build_model(network, params):
                     for p in model.periods:
                         p_up += model.flex_p_up[i, s_m, s_o, p]
                         p_down += model.flex_p_down[i, s_m, s_o, p]
-                    model.fl_p_balance.add(p_up - p_down >= -SMALL_TOLERANCE)   # FL energy balance added as a strict constraint
-                    model.fl_p_balance.add(p_up - p_down <= SMALL_TOLERANCE)    # - Note: helps with convergence (numerical issues)
+                    if not params.relaxed_model:
+                        model.fl_p_balance.add(p_up - p_down >= -SMALL_TOLERANCE)   # FL energy balance added as a strict constraint
+                        model.fl_p_balance.add(p_up - p_down <= SMALL_TOLERANCE)    # - Note: helps with convergence (numerical issues)
+                    else:
+                        model.fl_p_balance.add(p_up - p_down <= model.penalty_flex_day_balance[i, s_m, s_o])    # - Note: helps with convergence (numerical issues)
 
     # - Energy Storage constraints
     if params.es_reg:
@@ -1037,6 +1041,11 @@ def _build_model(network, params):
                             penalty_gen_vg = model.penalty_gen_vg[i, s_m, s_o, p]
                             obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_gen_vg
 
+                    # Flexibility day balance
+                    for i in model.nodes:
+                        penalty_day_balance = model.penalty_flex_day_balance[i, s_m, s_o]
+                        obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
+
                 obj += obj_scenario * omega_market * omega_oper
 
         # ESS Planning -- Slack Penalty
@@ -1145,6 +1154,11 @@ def _build_model(network, params):
                         for p in model.periods:
                             penalty_gen_vg = model.penalty_gen_vg[i, s_m, s_o, p]
                             obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_gen_vg
+
+                    # Flexibility day balance
+                    for i in model.nodes:
+                        penalty_day_balance = model.penalty_flex_day_balance[i, s_m, s_o]
+                        obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
 
                 obj += obj_scenario * omega_market * omega_oper
 
