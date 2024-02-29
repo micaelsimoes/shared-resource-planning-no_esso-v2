@@ -64,8 +64,8 @@ def shared_resources_planning(working_directory, specification_filename):
 
     #planning_problem.run_planning_problem()
     #candidate_solution = planning_problem.get_initial_candidate_solution()
-    #planning_problem.run_operational_planning()
-    planning_problem.run_without_coordination()
+    planning_problem.run_operational_planning()
+    #planning_problem.run_without_coordination()
 
     '''
     transmission_network = planning_problem.transmission_network
