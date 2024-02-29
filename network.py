@@ -723,8 +723,8 @@ def _build_model(network, params):
 
                     node = network.nodes[i]
 
-                    Pd = node.pd[s_o][p]
-                    Qd = node.qd[s_o][p]
+                    Pd = model.pc[i, s_m, s_o, p]
+                    Qd = model.qc[i, s_m, s_o, p]
                     if params.fl_reg:
                         Pd += (model.flex_p_up[i, s_m, s_o, p] - model.flex_p_down[i, s_m, s_o, p])
                     if params.l_curt:
@@ -1037,19 +1037,19 @@ def _build_model(network, params):
                             penalty_day_balance = model.penalty_shared_es_soc_day_balance[e, s_m, s_o]
                             obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
 
-                # Flexibility day balance
+                # - Flexibility day balance
                 if params.fl_reg:
                     if params.fl_relax:
                         for i in model.nodes:
                             penalty_day_balance = model.penalty_flex_day_balance[i, s_m, s_o]
                             obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
 
-                # PV bus voltage set-point
+                # - PV bus voltage set-point
                 if params.relaxed_model:
                     for i in model.nodes:
                         for p in model.periods:
                             penalty_gen_vg = model.penalty_gen_vg[i, s_m, s_o, p]
-                            obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_gen_vg
+                            obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_gen_vg)
 
                 obj += obj_scenario * omega_market * omega_oper
 
@@ -1167,7 +1167,7 @@ def _build_model(network, params):
                     for i in model.nodes:
                         for p in model.periods:
                             penalty_gen_vg = model.penalty_gen_vg[i, s_m, s_o, p]
-                            obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_gen_vg
+                            obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_gen_vg)
 
                 obj += obj_scenario * omega_market * omega_oper
 
@@ -1176,6 +1176,7 @@ def _build_model(network, params):
             obj += PENALTY_ESS_SLACK * (model.shared_es_s_slack_up[e] + model.shared_es_s_slack_down[e])
             obj += PENALTY_ESS_SLACK * (model.shared_es_e_slack_up[e] + model.shared_es_e_slack_down[e])
 
+        # Relaxation penalties
         if params.relaxed_model:
 
             # - Interface PF and Vmag, and Shared ESS
