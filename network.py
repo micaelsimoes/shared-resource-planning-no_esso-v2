@@ -402,7 +402,7 @@ def _build_model(network, params):
         model.es_sdch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.es_pdch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
         model.es_qdch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
-        if params.relaxed_model:
+        if params.ess_relax:
             model.penalty_es_ch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
             model.penalty_es_dch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
             model.penalty_es_soc = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
@@ -443,7 +443,7 @@ def _build_model(network, params):
     model.shared_es_pdch = pe.Var(model.shared_energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
     model.shared_es_qch = pe.Var(model.shared_energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
     model.shared_es_qdch = pe.Var(model.shared_energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
-    if params.relaxed_model:
+    if params.ess_relax:
         model.penalty_shared_es_ch = pe.Var(model.shared_energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.penalty_shared_es_dch = pe.Var(model.shared_energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.penalty_shared_es_soc = pe.Var(model.shared_energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
@@ -582,7 +582,7 @@ def _build_model(network, params):
                         qdch = model.es_qdch[e, s_m, s_o, p]
 
                         # ESS operation
-                        if not params.relaxed_model:
+                        if not params.ess_relax:
                             model.energy_storage_operation.add(sch ** 2 - (pch ** 2 + qch ** 2) >= -(1/s_base) * SMALL_TOLERANCE)
                             model.energy_storage_operation.add(sch ** 2 - (pch ** 2 + qch ** 2) <= (1/s_base) * SMALL_TOLERANCE)
                             model.energy_storage_operation.add(sdch ** 2 - (pdch ** 2 + qdch ** 2) >= -(1/s_base) * SMALL_TOLERANCE)
@@ -598,26 +598,26 @@ def _build_model(network, params):
 
                         # State-of-Charge
                         if p > 0:
-                            if not params.relaxed_model:
+                            if not params.ess_relax:
                                 model.energy_storage_balance.add(model.es_soc[e, s_m, s_o, p] - model.es_soc[e, s_m, s_o, p - 1] - (sch * eff_charge - sdch / eff_discharge) >= -SMALL_TOLERANCE)
                                 model.energy_storage_balance.add(model.es_soc[e, s_m, s_o, p] - model.es_soc[e, s_m, s_o, p - 1] - (sch * eff_charge - sdch / eff_discharge) <= SMALL_TOLERANCE)
                             else:
                                 model.energy_storage_balance.add(model.es_soc[e, s_m, s_o, p] - model.es_soc[e, s_m, s_o, p - 1] - (sch * eff_charge - sdch / eff_discharge) <= model.penalty_es_soc[e, s_m, s_o, p])
                         else:
-                            if not params.relaxed_model:
+                            if not params.ess_relax:
                                 model.energy_storage_balance.add(model.es_soc[e, s_m, s_o, p] - soc_init - (sch * eff_charge - sdch / eff_discharge) >= -(1/s_base) * SMALL_TOLERANCE)
                                 model.energy_storage_balance.add(model.es_soc[e, s_m, s_o, p] - soc_init - (sch * eff_charge - sdch / eff_discharge) <= (1/s_base) * SMALL_TOLERANCE)
                             else:
                                 model.energy_storage_balance.add(model.es_soc[e, s_m, s_o, p] - soc_init - (sch * eff_charge - sdch / eff_discharge) <= model.penalty_es_soc[e, s_m, s_o, p])
 
                         # Charging/discharging complementarity constraints
-                        if not params.relaxed_model:
+                        if not params.ess_relax:
                             model.energy_storage_ch_dch_exclusion.add(sch * sdch >= -(1 / s_base ** 2) * SMALL_TOLERANCE)  # Note: helps with convergence
                             model.energy_storage_ch_dch_exclusion.add(sch * sdch <= (1 / s_base ** 2) * SMALL_TOLERANCE)
                         else:
                             model.energy_storage_ch_dch_exclusion.add(sch * sdch <= model.penalty_es_comp[e, s_m, s_o, p])
 
-                    if not params.relaxed_model:
+                    if not params.ess_relax:
                         model.energy_storage_day_balance.add(model.es_soc[e, s_m, s_o, len(model.periods) - 1] - soc_final >= -SMALL_TOLERANCE)
                         model.energy_storage_day_balance.add(model.es_soc[e, s_m, s_o, len(model.periods) - 1] - soc_final <= SMALL_TOLERANCE)
                     else:
@@ -684,26 +684,26 @@ def _build_model(network, params):
 
                     # State-of-Charge
                     if p > 0:
-                        if not params.relaxed_model:
+                        if not params.ess_relax:
                             model.shared_energy_storage_balance.add(model.shared_es_soc[e, s_m, s_o, p] - model.shared_es_soc[e, s_m, s_o, p - 1] - (sch * eff_charge - sdch / eff_discharge) >= -SMALL_TOLERANCE)
                             model.shared_energy_storage_balance.add(model.shared_es_soc[e, s_m, s_o, p] - model.shared_es_soc[e, s_m, s_o, p - 1] - (sch * eff_charge - sdch / eff_discharge) <= SMALL_TOLERANCE)
                         else:
                             model.shared_energy_storage_balance.add(model.shared_es_soc[e, s_m, s_o, p] - model.shared_es_soc[e, s_m, s_o, p - 1] - (sch * eff_charge - sdch / eff_discharge) <= model.penalty_shared_es_soc[e, s_m, s_o, p])
                     else:
-                        if not params.relaxed_model:
+                        if not params.ess_relax:
                             model.shared_energy_storage_balance.add(model.shared_es_soc[e, s_m, s_o, p] - soc_init - (sch * eff_charge - sdch / eff_discharge) >= -SMALL_TOLERANCE)
                             model.shared_energy_storage_balance.add(model.shared_es_soc[e, s_m, s_o, p] - soc_init - (sch * eff_charge - sdch / eff_discharge) <= SMALL_TOLERANCE)
                         else:
                             model.shared_energy_storage_balance.add(model.shared_es_soc[e, s_m, s_o, p] - soc_init - (sch * eff_charge - sdch / eff_discharge) <= model.penalty_shared_es_soc[e, s_m, s_o, p])
 
                     # Charging/discharging complementarity constraints
-                    if not params.relaxed_model:
+                    if not params.ess_relax:
                         model.shared_energy_storage_ch_dch_exclusion.add(sch * sdch >= -(1 / s_base) * SMALL_TOLERANCE)
                         model.shared_energy_storage_ch_dch_exclusion.add(sch * sdch <= (1 / s_base) * SMALL_TOLERANCE)
                     else:
                         model.shared_energy_storage_ch_dch_exclusion.add(sch * sdch <= model.penalty_shared_es_comp[e, s_m, s_o, p])
 
-                if not params.relaxed_model:
+                if not params.ess_relax:
                     model.shared_energy_storage_day_balance.add(model.shared_es_soc[e, s_m, s_o, len(model.periods) - 1] - soc_final >= -SMALL_TOLERANCE)
                     model.shared_energy_storage_day_balance.add(model.shared_es_soc[e, s_m, s_o, len(model.periods) - 1] - soc_final <= SMALL_TOLERANCE)
                 else:
@@ -1011,7 +1011,7 @@ def _build_model(network, params):
                             obj_scenario += COST_SLACK_BRANCH_FLOW * network.baseMVA * slack_iij_sqr
 
                 # Relaxation penalties
-                if params.relaxed_model:
+                if params.ess_relax:
 
                     # - Shared ESS
                     for e in model.shared_energy_storages:
@@ -1034,6 +1034,8 @@ def _build_model(network, params):
                             obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_ch + penalty_dch + penalty_soc + penalty_comp)
                         penalty_day_balance = model.penalty_shared_es_soc_day_balance[e, s_m, s_o]
                         obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
+
+                if params.relaxed_model:
 
                     # PV bus voltage set-point
                     for i in model.nodes:
@@ -1125,7 +1127,7 @@ def _build_model(network, params):
                             obj_scenario += PENALTY_LOAD_CURTAILMENT * qc_curt
 
                 # Relaxation penalties
-                if params.relaxed_model:
+                if params.ess_relax:
 
                     # - Shared ESS
                     for e in model.shared_energy_storages:
@@ -1148,6 +1150,8 @@ def _build_model(network, params):
                             obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_ch + penalty_dch + penalty_soc + penalty_comp)
                         penalty_day_balance = model.penalty_shared_es_soc_day_balance[e, s_m, s_o]
                         obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
+
+                if params.relaxed_model:
 
                     # PV bus voltage set-point
                     for i in model.nodes:
