@@ -207,6 +207,8 @@ def _build_model(network, params):
         model.slack_e_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
         model.slack_f_up = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
         model.slack_f_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
+    if params.relaxed_model:
+        model.penalty_gen_vg = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
     for i in model.nodes:
         node = network.nodes[i]
         e_lb, e_ub = -node.v_max, node.v_max
@@ -500,8 +502,11 @@ def _build_model(network, params):
                         for p in model.periods:
                             e = model.e[i, s_m, s_o, p]
                             f = model.f[i, s_m, s_o, p]
-                            model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 >= -SMALL_TOLERANCE)
-                            model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= SMALL_TOLERANCE)
+                            if not params.relaxed_model:
+                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 >= -SMALL_TOLERANCE)
+                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= SMALL_TOLERANCE)
+                            else:
+                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= model.penalty_gen_vg[i, s_m, s_o, p])
             else:
                 # - Voltage at the bus is not controlled
                 for s_m in model.scenarios_market:
@@ -1026,6 +1031,12 @@ def _build_model(network, params):
                         penalty_day_balance = model.penalty_shared_es_soc_day_balance[e, s_m, s_o]
                         obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
 
+                    # PV bus voltage set-point
+                    for i in model.nodes:
+                        for p in model.periods:
+                            penalty_gen_vg = model.penalty_gen_vg[i, s_m, s_o, p]
+                            obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_gen_vg
+
                 obj += obj_scenario * omega_market * omega_oper
 
         # ESS Planning -- Slack Penalty
@@ -1128,6 +1139,12 @@ def _build_model(network, params):
                             obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * (penalty_ch + penalty_dch + penalty_soc + penalty_comp)
                         penalty_day_balance = model.penalty_shared_es_soc_day_balance[e, s_m, s_o]
                         obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
+
+                    # PV bus voltage set-point
+                    for i in model.nodes:
+                        for p in model.periods:
+                            penalty_gen_vg = model.penalty_gen_vg[i, s_m, s_o, p]
+                            obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_gen_vg
 
                 obj += obj_scenario * omega_market * omega_oper
 
