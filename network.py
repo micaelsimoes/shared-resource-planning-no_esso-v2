@@ -209,7 +209,6 @@ def _build_model(network, params):
         model.slack_f_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
     if params.relaxed_model:
         model.penalty_gen_vg = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
-        model.penalty_flex_day_balance = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, domain=pe.NonNegativeReals, initialize=0.00)
     for i in model.nodes:
         node = network.nodes[i]
         e_lb, e_ub = -node.v_max, node.v_max
@@ -349,6 +348,8 @@ def _build_model(network, params):
     if params.fl_reg:
         model.flex_p_up = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.flex_p_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
+        if params.fl_relax:
+            model.penalty_flex_day_balance = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, domain=pe.NonNegativeReals, initialize=0.00)
         for i in model.nodes:
             node = network.nodes[i]
             for s_m in model.scenarios_market:
@@ -546,7 +547,7 @@ def _build_model(network, params):
                     for p in model.periods:
                         p_up += model.flex_p_up[i, s_m, s_o, p]
                         p_down += model.flex_p_down[i, s_m, s_o, p]
-                    if not params.relaxed_model:
+                    if not params.fl_relax:
                         model.fl_p_balance.add(p_up - p_down >= -SMALL_TOLERANCE)   # FL energy balance added as a strict constraint
                         model.fl_p_balance.add(p_up - p_down <= SMALL_TOLERANCE)    # - Note: helps with convergence (numerical issues)
                     else:
@@ -1035,18 +1036,18 @@ def _build_model(network, params):
                         penalty_day_balance = model.penalty_shared_es_soc_day_balance[e, s_m, s_o]
                         obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
 
-                if params.relaxed_model:
+                # Flexibility day balance
+                if params.fl_relax:
+                    for i in model.nodes:
+                        penalty_day_balance = model.penalty_flex_day_balance[i, s_m, s_o]
+                        obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
 
-                    # PV bus voltage set-point
+                # PV bus voltage set-point
+                if params.relaxed_model:
                     for i in model.nodes:
                         for p in model.periods:
                             penalty_gen_vg = model.penalty_gen_vg[i, s_m, s_o, p]
                             obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_gen_vg
-
-                    # Flexibility day balance
-                    for i in model.nodes:
-                        penalty_day_balance = model.penalty_flex_day_balance[i, s_m, s_o]
-                        obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
 
                 obj += obj_scenario * omega_market * omega_oper
 
@@ -1151,18 +1152,18 @@ def _build_model(network, params):
                         penalty_day_balance = model.penalty_shared_es_soc_day_balance[e, s_m, s_o]
                         obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
 
-                if params.relaxed_model:
+                # Flexibility day balance
+                if params.fl_relax:
+                    for i in model.nodes:
+                        penalty_day_balance = model.penalty_flex_day_balance[i, s_m, s_o]
+                        obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
 
-                    # PV bus voltage set-point
+                # PV bus voltage set-point
+                if params.relaxed_model:
                     for i in model.nodes:
                         for p in model.periods:
                             penalty_gen_vg = model.penalty_gen_vg[i, s_m, s_o, p]
                             obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_gen_vg
-
-                    # Flexibility day balance
-                    for i in model.nodes:
-                        penalty_day_balance = model.penalty_flex_day_balance[i, s_m, s_o]
-                        obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
 
                 obj += obj_scenario * omega_market * omega_oper
 
