@@ -110,6 +110,7 @@ def _run_operational_planning_problem(operational_planning_problem, candidate_so
 
     start = time.time()
     primal_evolution = list()
+    from_warm_start = False
 
     # Create ADMM variables
     consensus_vars, dual_vars, consensus_vars_prev_iter = create_admm_variables(operational_planning_problem)
@@ -136,7 +137,7 @@ def _run_operational_planning_problem(operational_planning_problem, candidate_so
         results['tso'] = update_transmission_coordination_model_and_solve(transmission_network, tso_model,
                                                                           consensus_vars['interface']['pf']['dso'], dual_vars['pf']['tso'],
                                                                           consensus_vars['ess']['dso'], dual_vars['ess']['tso'],
-                                                                          admm_parameters)
+                                                                          admm_parameters, from_warm_start=from_warm_start)
 
         # 2.1 Update ADMM CONSENSUS variables
         operational_planning_problem.update_admm_consensus_variables(tso_model, dso_models, consensus_vars, dual_vars, consensus_vars_prev_iter, admm_parameters)
@@ -156,7 +157,7 @@ def _run_operational_planning_problem(operational_planning_problem, candidate_so
                                                                            consensus_vars['interface']['v'],
                                                                            consensus_vars['interface']['pf']['tso'], dual_vars['pf']['dso'],
                                                                            consensus_vars['ess']['tso'], dual_vars['ess']['dso'],
-                                                                           admm_parameters)
+                                                                           admm_parameters, from_warm_start=from_warm_start)
 
         # 3.1 Update ADMM CONSENSUS variables
         operational_planning_problem.update_admm_consensus_variables(tso_model, dso_models, consensus_vars, dual_vars, consensus_vars_prev_iter, admm_parameters)
@@ -172,6 +173,8 @@ def _run_operational_planning_problem(operational_planning_problem, candidate_so
         iter_end = time.time()
         print('[INFO] \t - Iter {}: {:.2f} s'.format(num_iter, iter_end - iter_start))
         num_iter += 1
+
+        from_warm_start = True
 
     if not convergence:
         print(f'[WARNING] ADMM did NOT converge in {admm_parameters.num_max_iters} iterations!')
@@ -632,7 +635,7 @@ def _update_shared_energy_storage_variables(planning_problem, tso_model, dso_mod
                     dual_vars['dso'][node_id][year][day]['q'][t] += params.rho['ess'][distribution_network.name] * (error_q_ess_distr)
 
 
-def update_transmission_coordination_model_and_solve(transmission_network, model, pf_req, dual_pf, ess_req, dual_ess, params):
+def update_transmission_coordination_model_and_solve(transmission_network, model, pf_req, dual_pf, ess_req, dual_ess, params, from_warm_start=False):
 
     print('[INFO] \t\t - Updating transmission network...')
 
@@ -671,7 +674,7 @@ def update_transmission_coordination_model_and_solve(transmission_network, model
                     model[year][day].q_ess_req[shared_ess_idx, p].fix(ess_req[node_id][year][day]['q'][p] / s_base)
 
     # Solve!
-    res = transmission_network.optimize(model, from_warm_start=False)
+    res = transmission_network.optimize(model, from_warm_start=from_warm_start)
     for year in transmission_network.years:
         for day in transmission_network.days:
             if res[year][day].solver.status == po.SolverStatus.error:
@@ -795,7 +798,7 @@ def update_distribution_models_to_admm(distribution_networks, models, initial_in
                 dso_model[year][day].objective.expr = obj
 
 
-def update_distribution_coordination_models_and_solve(distribution_networks, models, interface_vmag, pf_req, dual_pf, ess_req, dual_ess, params):
+def update_distribution_coordination_models_and_solve(distribution_networks, models, interface_vmag, pf_req, dual_pf, ess_req, dual_ess, params, from_warm_start=False):
 
     print('[INFO] \t\t - Updating distribution networks:')
     res = dict()
@@ -840,7 +843,7 @@ def update_distribution_coordination_models_and_solve(distribution_networks, mod
                     model[year][day].q_ess_req[p].fix(ess_req[node_id][year][day]['q'][p] / s_base)
 
         # Solve!
-        res[node_id] = distribution_network.optimize(model, from_warm_start=False)
+        res[node_id] = distribution_network.optimize(model, from_warm_start=from_warm_start)
         for year in distribution_network.years:
             for day in distribution_network.days:
                 if res[node_id][year][day].solver.status == po.SolverStatus.error:
