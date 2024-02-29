@@ -50,6 +50,10 @@ class SharedResourcesPlanning:
         filename = os.path.join(self.data_dir, self.params_file)
         self.params.read_parameters_from_file(filename)
 
+    def run_planning_problem(self):
+        print('[INFO] Running PLANNING PROBLEM...')
+        _run_planning_problem(self)
+
     def run_operational_planning(self, candidate_solution=dict(), print_results=True):
         print('[INFO] Running OPERATIONAL PLANNING...')
         if not candidate_solution:
@@ -58,7 +62,7 @@ class SharedResourcesPlanning:
         self.transmission_network.update_data_with_candidate_solution(candidate_solution['total_capacity'])
         for node_id in self.active_distribution_network_nodes:
             self.distribution_networks[node_id].update_data_with_candidate_solution(candidate_solution['total_capacity'])
-        results, models, sensitivities, primal_evolution = _run_operational_planning_problem(self, candidate_solution)
+        results, models, sensitivities, primal_evolution = _run_operational_planning_problem(self)
         if print_results:
             self.write_operational_planning_results_to_excel(models, results, primal_evolution)
         return results, models, sensitivities, primal_evolution
@@ -69,6 +73,26 @@ class SharedResourcesPlanning:
         if print_results:
             self.write_operational_planning_results_without_coordination_to_excel(optim_models, results)
         return results, optim_models
+
+    def build_master_problem(self):
+        return _build_master_problem(self)
+
+    def get_upper_bound(self, model):
+        upper_bound = 0.00
+        years = [year for year in self.years]
+        for year in self.years:
+            num_years = self.years[year]
+            annualization = 1 / ((1 + self.discount_factor) ** (int(year) - int(years[0])))
+            for day in self.days:
+                num_days = self.days[day]
+                network = self.transmission_network.network[year][day]
+                params = self.transmission_network.params
+                obj_repr_day = network.compute_objective_function_value(model[year][day], params)
+                upper_bound += num_days * num_years * annualization * obj_repr_day
+        return upper_bound
+
+    def add_benders_cut(self, model, upper_bound, sensitivities, candidate_solution):
+        _add_benders_cut(self, model, upper_bound, sensitivities, candidate_solution)
 
     def update_admm_consensus_variables(self, tso_model, dso_models, consensus_vars, dual_vars, consensus_vars_prev_iter, params):
         _update_admm_consensus_variables(self, tso_model, dso_models, consensus_vars, dual_vars, consensus_vars_prev_iter, params)
@@ -94,9 +118,190 @@ class SharedResourcesPlanning:
 
 
 # ======================================================================================================================
+#  PLANNING functions
+# ======================================================================================================================
+def _run_planning_problem(planning_problem):
+
+    shared_ess_data = planning_problem.shared_ess_data
+    shared_ess_parameters = shared_ess_data.params
+    benders_parameters = planning_problem.params.benders
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # 0. Initialization
+    iter = 1
+    convergence = False
+    lower_bound = -shared_ess_parameters.budget * 1e3
+    upper_bound = shared_ess_parameters.budget * 1e3
+    lower_bound_evolution = [lower_bound]
+    upper_bound_evolution = [upper_bound]
+    candidate_solution = planning_problem.get_initial_candidate_solution()
+
+    start = time.time()
+    master_problem_model = planning_problem.build_master_problem()
+
+    # Benders' main cycle
+    while iter < benders_parameters.num_max_iters and not convergence:
+
+        print(f'=============================================== ITERATION #{iter} ==============================================')
+        print(f'[INFO] Iter {iter}. LB = {lower_bound}, UB = {upper_bound}')
+
+        _print_candidate_solution(candidate_solution)
+
+        # 1. Subproblem
+        # 1.1. Solve operational planning, with fixed investment variables,
+        # 1.2. Get coupling constraints' sensitivities (subproblem)
+        # 1.3. Get OF value (upper bound) from the subproblem
+        operational_results, lower_level_models, sensitivities, _ = planning_problem.run_operational_planning(candidate_solution, print_results=False)
+        upper_bound = planning_problem.get_upper_bound(lower_level_models['tso'])
+        upper_bound_evolution.append(upper_bound)
+        print('[INFO] Estimated cost: {:.6f}'.format(upper_bound))
+
+        #  - Convergence check
+        if isclose(upper_bound, lower_bound, abs_tol=benders_parameters.tol_abs, rel_tol=benders_parameters.tol_rel):
+            lower_bound_evolution.append(lower_bound)
+            convergence = True
+            break
+
+        iter += 1
+
+        # 2. Solve Master problem
+        # 2.1. Add Benders' cut, based on the sensitivities obtained from the subproblem
+        # 2.2. Run master problem optimization
+        # 2.3. Get new capacity values, and the value of alpha (lower bound)
+        planning_problem.add_benders_cut(master_problem_model, upper_bound, sensitivities, candidate_solution)
+        shared_ess_data.optimize(master_problem_model)
+        candidate_solution = shared_ess_data.get_candidate_solution(master_problem_model)
+        lower_bound = pe.value(master_problem_model.alpha)
+        lower_bound_evolution.append(lower_bound)
+
+
+
+    if not convergence:
+        print('[WARNING] Convergence not obtained!')
+
+    print('[INFO] Final. LB = {}, UB = {}'.format(lower_bound, upper_bound))
+
+    # Write results
+    end = time.time()
+    total_execution_time = end - start
+    bound_evolution = {'lower_bound': lower_bound_evolution, 'upper_bound': upper_bound_evolution}
+
+
+def _add_benders_cut(planning_problem, model, upper_bound, sensitivities, candidate_solution):
+    years = [year for year in planning_problem.years]
+    benders_cut = upper_bound
+    for e in model.energy_storages:
+        for y in model.years:
+            year = years[y]
+            node_id = planning_problem.active_distribution_network_nodes[e]
+            sensitivity_s = 0.00
+            sensitivity_e = 0.00
+            for day in planning_problem.days:
+                sensitivity_s += sensitivities['s'][year][node_id] * (planning_problem.days[day] / 365.00)
+                sensitivity_e += sensitivities['e'][year][node_id] * (planning_problem.days[day] / 365.00)
+            benders_cut += sensitivity_s * (model.es_s_rated[e, y] - candidate_solution['total_capacity'][node_id][year]['s'])
+            benders_cut += sensitivity_e * (model.es_e_rated[e, y] - candidate_solution['total_capacity'][node_id][year]['e'])
+    model.benders_cuts.add(model.alpha >= benders_cut)
+
+
+# ======================================================================================================================
+#  MASTER PROBLEM  functions
+# ======================================================================================================================
+def _build_master_problem(planning_problem):
+
+    shared_ess_data = planning_problem.shared_ess_data
+    years = [year for year in planning_problem.years]
+
+    model = pe.ConcreteModel()
+    model.name = "ESS Optimization -- Benders' Master Problem"
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Sets
+    model.years = range(len(planning_problem.years))
+    model.energy_storages = range(len(planning_problem.active_distribution_network_nodes))
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Decision variables
+    model.es_s_invesment = pe.Var(model.energy_storages, model.years, domain=pe.NonNegativeReals)     # Investment in power capacity in year y
+    model.es_e_invesment = pe.Var(model.energy_storages, model.years, domain=pe.NonNegativeReals)     # Investment in energy capacity in year y
+    model.es_s_rated = pe.Var(model.energy_storages, model.years, domain=pe.NonNegativeReals)         # Total rated power capacity (considering calendar life)
+    model.es_e_rated = pe.Var(model.energy_storages, model.years, domain=pe.NonNegativeReals)         # Total rated energy capacity (considering calendar life, not considering degradation)
+    model.alpha = pe.Var(domain=pe.Reals)                                                             # alpha (associated with cuts) will try to rebuild y in the original problem
+    model.alpha.setlb(-shared_ess_data.params.budget * 1e3)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Constraints
+    # - Yearly Power and Energy ratings as a function of yearly investments
+    model.rated_s_capacity = pe.ConstraintList()
+    model.rated_e_capacity = pe.ConstraintList()
+    for e in model.energy_storages:
+        total_s_capacity_per_year = [0.0 for _ in model.years]
+        total_e_capacity_per_year = [0.0 for _ in model.years]
+        for y in model.years:
+            year = years[y]
+            num_years = shared_ess_data.years[year]
+            shared_energy_storage = shared_ess_data.shared_energy_storages[year][e]
+            tcal_norm = round(shared_energy_storage.t_cal / num_years)
+            max_tcal_norm = min(y + tcal_norm, len(shared_ess_data.years))
+            for x in range(y, max_tcal_norm):
+                total_s_capacity_per_year[x] += model.es_s_invesment[e, y]
+                total_e_capacity_per_year[x] += model.es_e_invesment[e, y]
+        for y in model.years:
+            model.rated_s_capacity.add(model.es_s_rated[e, y] == total_s_capacity_per_year[y])
+            model.rated_e_capacity.add(model.es_e_rated[e, y] == total_e_capacity_per_year[y])
+
+    # - Maximum Energy Capacity (related to space constraints)
+    model.energy_storage_maximum_capacity = pe.ConstraintList()
+    for e in model.energy_storages:
+        for y in model.years:
+            model.energy_storage_maximum_capacity.add(model.es_e_rated[e, y] <= shared_ess_data.params.max_capacity)
+
+    # - S/E factor
+    model.energy_storage_power_to_energy_factor = pe.ConstraintList()
+    for e in model.energy_storages:
+        for y in model.years:
+            model.energy_storage_power_to_energy_factor.add(model.es_s_rated[e, y] >= model.es_e_rated[e, y] * shared_ess_data.params.min_pe_factor)
+            model.energy_storage_power_to_energy_factor.add(model.es_s_rated[e, y] <= model.es_e_rated[e, y] * shared_ess_data.params.max_pe_factor)
+
+    # - Maximum Investment Cost
+    investment_cost_total = 0.0
+    model.energy_storage_investment = pe.ConstraintList()
+    for y in model.years:
+        year = years[y]
+        c_inv_s = shared_ess_data.cost_investment['power_capacity'][year]
+        c_inv_e = shared_ess_data.cost_investment['energy_capacity'][year]
+        annualization = 1 / ((1 + shared_ess_data.discount_factor) ** (int(year) - int(years[0])))
+        for e in model.energy_storages:
+            investment_cost_total += annualization * model.es_s_invesment[e, y] * c_inv_s
+            investment_cost_total += annualization * model.es_e_invesment[e, y] * c_inv_e
+    model.energy_storage_investment.add(investment_cost_total <= shared_ess_data.params.budget)
+
+    # Benders' cuts
+    model.benders_cuts = pe.ConstraintList()
+
+    # Objective function
+    investment_cost = 0.0
+    for e in model.energy_storages:
+        for y in model.years:
+            year = years[y]
+            c_inv_s = shared_ess_data.cost_investment['power_capacity'][year]
+            c_inv_e = shared_ess_data.cost_investment['energy_capacity'][year]
+            annualization = 1 / ((1 + shared_ess_data.discount_factor) ** (int(year) - int(years[0])))
+
+            # Investment Cost
+            investment_cost += annualization * model.es_s_invesment[e, y] * c_inv_s
+            investment_cost += annualization * model.es_e_invesment[e, y] * c_inv_e
+
+    obj = investment_cost + model.alpha
+    model.objective = pe.Objective(sense=pe.minimize, expr=obj)
+
+    return model
+
+
+# ======================================================================================================================
 #  OPERATIONAL PLANNING functions
 # ======================================================================================================================
-def _run_operational_planning_problem(operational_planning_problem, candidate_solution):
+def _run_operational_planning_problem(operational_planning_problem):
 
     transmission_network = operational_planning_problem.transmission_network
     distribution_networks = operational_planning_problem.distribution_networks
@@ -3737,3 +3942,27 @@ def _add_shared_energy_storage_to_distribution_network(planning_problem):
                 shared_energy_storage.s = shared_energy_storage.s / s_base
                 shared_energy_storage.e = shared_energy_storage.e / s_base
                 planning_problem.distribution_networks[node_id].network[year][day].shared_energy_storages.append(shared_energy_storage)
+
+
+def _print_candidate_solution(candidate_solution):
+
+    print('[INFO] Candidate solution:')
+
+    # Header
+    print('\t\t{:3}\t{:10}\t'.format('', 'Capacity'), end='')
+    for node_id in candidate_solution['total_capacity']:
+        for year in candidate_solution['total_capacity'][node_id]:
+            print(f'{year}\t', end='')
+        print()
+        break
+
+    # Values
+    for node_id in candidate_solution['total_capacity']:
+        print('\t\t{:3}\t{:10}\t'.format(node_id, 'S, [MVA]'), end='')
+        for year in candidate_solution['total_capacity'][node_id]:
+            print("{:.3f}\t".format(candidate_solution['total_capacity'][node_id][year]['s']), end='')
+        print()
+        print('\t\t{:3}\t{:10}\t'.format(node_id, 'E, [MVAh]'), end='')
+        for year in candidate_solution['total_capacity'][node_id]:
+            print("{:.3f}\t".format(candidate_solution['total_capacity'][node_id][year]['e']), end='')
+        print()

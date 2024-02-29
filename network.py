@@ -2008,24 +2008,24 @@ def _compute_objective_function_value(network, model, params):
                     if network.generators[g].is_controllable():
                         for p in model.periods:
                             obj_scenario += c_p[s_m][p] * network.baseMVA * pe.value(model.pg[g, s_m, s_o, p])
-                            #obj_scenario += c_q[s_m][p] * network.baseMVA * pe.value(model.qg[g, s_m, s_o, p])
 
                 # Demand side flexibility
                 if params.fl_reg:
                     for i in model.nodes:
                         node = network.nodes[i]
                         for p in model.periods:
-                            cost_flex = node.flexibility.cost[p] * network.baseMVA
-                            flex_up = pe.value(model.flex_p_up[i, s_m, s_o, p])
+                            cost_flex = node.flexibility.cost[p]
                             flex_down = pe.value(model.flex_p_down[i, s_m, s_o, p])
-                            obj_scenario += cost_flex * (flex_up + flex_down)
+                            obj_scenario += cost_flex * network.baseMVA * flex_down
 
                 # Load curtailment
                 if params.l_curt:
                     for i in model.nodes:
                         for p in model.periods:
                             pc_curt = pe.value(model.pc_curt[i, s_m, s_o, p])
+                            qc_curt = pe.value(model.qc_curt[i, s_m, s_o, p])
                             obj_scenario += (COST_CONSUMPTION_CURTAILMENT * network.baseMVA) * pc_curt
+                            obj_scenario += (COST_CONSUMPTION_CURTAILMENT * network.baseMVA) * qc_curt
 
                 # Generation curtailment
                 if params.rg_curt:
