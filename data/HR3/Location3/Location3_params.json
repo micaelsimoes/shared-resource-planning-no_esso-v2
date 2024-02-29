@@ -5,7 +5,7 @@
 	"fl_reg": true,
 	"rg_curt": true,
 	"l_curt": false,
-	"relaxed_model": true,
+	"relaxed_model": false,
 	"ess_relax": false,
 	"fl_relax": false,
 	"enforce_vg": false,
