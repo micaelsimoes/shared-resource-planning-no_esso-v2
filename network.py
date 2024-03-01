@@ -1864,7 +1864,7 @@ def _process_results(network, model, params, results=dict()):
             # Shared Energy Storages
             for e in model.shared_energy_storages:
                 node_id = network.shared_energy_storages[e].bus
-                capacity = network.shared_energy_storages[e].s * network.baseMVA
+                capacity = network.shared_energy_storages[e].e * network.baseMVA
                 processed_results['scenarios'][s_m][s_o]['shared_energy_storages']['p'][node_id] = []
                 processed_results['scenarios'][s_m][s_o]['shared_energy_storages']['q'][node_id] = []
                 processed_results['scenarios'][s_m][s_o]['shared_energy_storages']['s'][node_id] = []
