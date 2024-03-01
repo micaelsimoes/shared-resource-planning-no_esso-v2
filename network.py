@@ -985,10 +985,10 @@ def _build_model(network, params):
                     # - Shared ESS
                     for e in model.shared_energy_storages:
                         for p in model.periods:
-                            penalty_ch = PENALTY_RELAXED_MODEL**2 * model.penalty_shared_es_ch[e, s_m, s_o, p]
-                            penalty_dch = PENALTY_RELAXED_MODEL**2 * model.penalty_shared_es_ch[e, s_m, s_o, p]
+                            penalty_ch = PENALTY_RELAXED_MODEL * 1e2 * model.penalty_shared_es_ch[e, s_m, s_o, p]
+                            penalty_dch = PENALTY_RELAXED_MODEL * 1e2 * model.penalty_shared_es_ch[e, s_m, s_o, p]
                             penalty_soc = PENALTY_RELAXED_MODEL * model.penalty_shared_es_soc[e, s_m, s_o, p]
-                            penalty_comp = PENALTY_RELAXED_MODEL**2 * model.penalty_shared_es_comp[e, s_m, s_o, p]
+                            penalty_comp = PENALTY_RELAXED_MODEL * 1e2 * model.penalty_shared_es_comp[e, s_m, s_o, p]
                             obj_scenario += network.baseMVA * (penalty_ch + penalty_dch + penalty_soc + penalty_comp)
                         penalty_day_balance = model.penalty_shared_es_soc_day_balance[e, s_m, s_o]
                         obj_scenario += PENALTY_RELAXED_MODEL * network.baseMVA * penalty_day_balance
