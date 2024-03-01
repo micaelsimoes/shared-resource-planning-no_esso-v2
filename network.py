@@ -1942,7 +1942,6 @@ def _process_results(network, model, params, results=dict()):
                 if params.fl_reg and params.fl_relax:
                     for i in model.nodes:
                         node_id = network.nodes[i].bus_i
-                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes']['gen_vg'][node_id] = []
                         processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes']['day_balance'][node_id] = pe.value(model.penalty_flex_day_balance[e, s_m, s_o])
                         for p in model.periods:
                             slack_vg = pe.value(model.penalty_gen_vg[i, s_m, s_o, p])
