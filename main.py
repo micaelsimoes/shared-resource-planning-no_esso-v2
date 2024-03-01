@@ -74,6 +74,7 @@ def shared_resources_planning(working_directory, specification_filename):
     results = transmission_network.optimize(tn_model)
     processed_results = transmission_network.process_results(tn_model, results)
     transmission_network.write_optimization_results_to_excel(processed_results)
+    print()
 
     '''
     distribution_networks = planning_problem.distribution_networks
