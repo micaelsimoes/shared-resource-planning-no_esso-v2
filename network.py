@@ -1688,23 +1688,26 @@ def _process_results(network, model, params, results=dict()):
                 processed_results['scenarios'][s_m][s_o]['energy_storages']['soc'] = dict()
                 processed_results['scenarios'][s_m][s_o]['energy_storages']['soc_percent'] = dict()
 
-            if params.relaxed_model:
+            if params.relaxed_model or params.ess_relax or params.fl_relax:
                 processed_results['scenarios'][s_m][s_o]['relaxation_slacks'] = dict()
-                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages'] = dict()
-                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['ch'] = dict()
-                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['dch'] = dict()
-                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['soc'] = dict()
-                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['comp'] = dict()
-                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['day_balance'] = dict()
-                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages'] = dict()
-                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['ch'] = dict()
-                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['dch'] = dict()
-                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['soc'] = dict()
-                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['comp'] = dict()
-                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['day_balance'] = dict()
-                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes'] = dict()
-                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes']['gen_vg'] = dict()
-                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes']['day_balance'] = dict()
+                if params.ess_relax:
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['ch'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['dch'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['soc'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['comp'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['day_balance'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['ch'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['dch'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['soc'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['comp'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['day_balance'] = dict()
+                if params.relaxed_model:
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes']['gen_vg'] = dict()
+                if params.fl_relax:
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes']['day_balance'] = dict()
 
             # Voltage
             for i in model.nodes:

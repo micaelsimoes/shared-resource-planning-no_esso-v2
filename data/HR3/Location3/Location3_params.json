@@ -7,7 +7,7 @@
 	"l_curt": false,
 	"relaxed_model": false,
 	"ess_relax": false,
-	"fl_relax": true,
+	"fl_relax": false,
 	"enforce_vg": false,
 	"slack_line_limits": true,
 	"slack_voltage_limits": true,
