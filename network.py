@@ -476,14 +476,13 @@ def _build_model(network, params):
                     if params.slack_voltage_limits:
                         e_actual += model.slack_e_up[i, s_m, s_o, p] - model.slack_e_down[i, s_m, s_o, p]
                         f_actual += model.slack_f_up[i, s_m, s_o, p] - model.slack_f_down[i, s_m, s_o, p]
-
                     model.voltage_definitions.add(model.e_actual[i, s_m, s_o, p] - e_actual <= SMALL_TOLERANCE)
                     model.voltage_definitions.add(model.e_actual[i, s_m, s_o, p] - e_actual >= -SMALL_TOLERANCE)
                     model.voltage_definitions.add(model.f_actual[i, s_m, s_o, p] - f_actual <= SMALL_TOLERANCE)
                     model.voltage_definitions.add(model.f_actual[i, s_m, s_o, p] - f_actual >= -SMALL_TOLERANCE)
 
+                    # Define vmag_sqr
                     vmag_sqr = model.e_actual[i, s_m, s_o, p] ** 2 + model.f_actual[i, s_m, s_o, p] ** 2
-
                     model.voltage_definitions.add(model.vmag_sqr[i, s_m, s_o, p] - vmag_sqr <= SMALL_TOLERANCE)
                     model.voltage_definitions.add(model.vmag_sqr[i, s_m, s_o, p] - vmag_sqr >= -SMALL_TOLERANCE)
 
@@ -494,17 +493,22 @@ def _build_model(network, params):
                             gen_idx = network.get_gen_idx(node.bus_i)
                             vg = network.generators[gen_idx].vg
                             if not params.relaxed_model:
-                                model.voltage_cons.add(model.vmag_sqr[i, s_m, s_o, p] == vg[p] ** 2)
+                                model.voltage_cons.add(model.e[i, s_m, s_o, p] ** 2 + model.f[i, s_m, s_o, p] ** 2 - vg[p] ** 2 <= SMALL_TOLERANCE)
+                                model.voltage_cons.add(model.e[i, s_m, s_o, p] ** 2 + model.f[i, s_m, s_o, p] ** 2 - vg[p] ** 2 >= -SMALL_TOLERANCE)
                             else:
-                                model.voltage_cons.add(model.vmag_sqr[i, s_m, s_o, p] - vg[p] ** 2 <= model.penalty_gen_vg[i, s_m, s_o, p])
+                                model.voltage_cons.add(model.e[i, s_m, s_o, p] ** 2 + model.f[i, s_m, s_o, p] ** 2 - vg[p] ** 2 <= model.penalty_gen_vg[i, s_m, s_o, p])
                         else:
-                            model.voltage_cons.add(model.vmag_sqr[i, s_m, s_o, p] <= node.v_max ** 2)
-                            model.voltage_cons.add(model.vmag_sqr[i, s_m, s_o, p] >= node.v_min ** 2)
+                            ei = model.e[i, s_m, s_o, p]
+                            fi = model.f[i, s_m, s_o, p]
+                            model.voltage_cons.add(ei ** 2 + fi ** 2 <= node.v_max ** 2)
+                            model.voltage_cons.add(ei ** 2 + fi ** 2 >= node.v_min ** 2)
                             if params.relaxed_model:
                                 model.penalty_gen_vg[i, s_m, s_o, p].fix(0.00)
                     elif node.type == BUS_PQ:
-                        model.voltage_cons.add(model.vmag_sqr[i, s_m, s_o, p] <= node.v_max ** 2)
-                        model.voltage_cons.add(model.vmag_sqr[i, s_m, s_o, p] >= node.v_min ** 2)
+                        ei = model.e[i, s_m, s_o, p]
+                        fi = model.f[i, s_m, s_o, p]
+                        model.voltage_cons.add(ei ** 2 + fi ** 2 <= node.v_max ** 2)
+                        model.voltage_cons.add(ei ** 2 + fi ** 2 >= node.v_min ** 2)
                         if params.relaxed_model:
                             model.penalty_gen_vg[i, s_m, s_o, p].fix(0.00)
 
