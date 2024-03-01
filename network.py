@@ -202,6 +202,9 @@ def _build_model(network, params):
     # - Voltage
     model.e = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=1.0)
     model.f = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
+    model.e_actual = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=1.0)
+    model.f_actual = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
+    model.vmag_sqr = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=1.0)
     if params.slack_voltage_limits:
         model.slack_e_up = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
         model.slack_e_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
@@ -230,13 +233,8 @@ def _build_model(network, params):
                 for s_m in model.scenarios_market:
                     for s_o in model.scenarios_operation:
                         for p in model.periods:
-                            model.e[i, s_m, s_o, p].fix(vg)
-                            model.f[i, s_m, s_o, p].fix(0.0)
-                            if params.slack_voltage_limits:
-                                model.slack_e_up[i, s_m, s_o, p].fix(0.0)
-                                model.slack_e_down[i, s_m, s_o, p].fix(0.0)
-                                model.slack_f_up[i, s_m, s_o, p].fix(0.0)
-                                model.slack_f_down[i, s_m, s_o, p].fix(0.0)
+                            model.e_actual[i, s_m, s_o, p].fix(vg)
+                            model.f_actual[i, s_m, s_o, p].fix(0.0)
         else:
             for s_m in model.scenarios_market:
                 for s_o in model.scenarios_operation:
@@ -464,51 +462,51 @@ def _build_model(network, params):
     # ------------------------------------------------------------------------------------------------------------------
     # Constraints
     # - Voltage
+    model.voltage_definitions = pe.ConstraintList()
     model.voltage_cons = pe.ConstraintList()
     for i in model.nodes:
         node = network.nodes[i]
-        if node.type == BUS_PV:
-            if params.enforce_vg:
-                # - Enforce voltage controlled bus
-                gen_idx = network.get_gen_idx(node.bus_i)
-                vg = network.generators[gen_idx].vg
-                for s_m in model.scenarios_market:
-                    for s_o in model.scenarios_operation:
-                        for p in model.periods:
-                            e = model.e[i, s_m, s_o, p]
-                            f = model.f[i, s_m, s_o, p]
+        for s_m in model.scenarios_market:
+            for s_o in model.scenarios_operation:
+                for p in model.periods:
+
+                    # Define e_actual and f actual
+                    e_actual = model.e[i, s_m, s_o, p]
+                    f_actual = model.f[i, s_m, s_o, p]
+                    if params.slack_voltage_limits:
+                        e_actual += model.slack_e_up[i, s_m, s_o, p] - model.slack_e_down[i, s_m, s_o, p]
+                        f_actual += model.slack_f_up[i, s_m, s_o, p] - model.slack_f_down[i, s_m, s_o, p]
+
+                    model.voltage_definitions.add(model.e_actual[i, s_m, s_o, p] - e_actual <= SMALL_TOLERANCE)
+                    model.voltage_definitions.add(model.e_actual[i, s_m, s_o, p] - e_actual >= -SMALL_TOLERANCE)
+                    model.voltage_definitions.add(model.f_actual[i, s_m, s_o, p] - f_actual <= SMALL_TOLERANCE)
+                    model.voltage_definitions.add(model.f_actual[i, s_m, s_o, p] - f_actual >= -SMALL_TOLERANCE)
+
+                    vmag_sqr = model.e_actual[i, s_m, s_o, p] ** 2 + model.f_actual[i, s_m, s_o, p] ** 2
+
+                    model.voltage_definitions.add(model.vmag_sqr[i, s_m, s_o, p] - vmag_sqr <= SMALL_TOLERANCE)
+                    model.voltage_definitions.add(model.vmag_sqr[i, s_m, s_o, p] - vmag_sqr >= -SMALL_TOLERANCE)
+
+                    # Voltage magnitude restrictions
+                    if node.type == BUS_PV:
+                        if params.enforce_vg:
+                            # - Enforce voltage controlled bus
+                            gen_idx = network.get_gen_idx(node.bus_i)
+                            vg = network.generators[gen_idx].vg
                             if not params.relaxed_model:
-                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 >= -SMALL_TOLERANCE)
-                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= SMALL_TOLERANCE)
+                                model.voltage_cons.add(model.vmag_sqr[i, s_m, s_o, p] == vg[p] ** 2)
                             else:
-                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= model.penalty_gen_vg[i, s_m, s_o, p])
-            else:
-                # - Voltage at the bus is not controlled
-                for s_m in model.scenarios_market:
-                    for s_o in model.scenarios_operation:
-                        for p in model.periods:
-                            e = model.e[i, s_m, s_o, p]
-                            f = model.f[i, s_m, s_o, p]
-                            if params.slack_voltage_limits:
-                                slack_v_up_sqr = model.slack_e_up[i, s_m, s_o, p] ** 2 + model.slack_f_up[i, s_m, s_o, p] ** 2
-                                slack_v_down_sqr = model.slack_e_down[i, s_m, s_o, p] ** 2 + model.slack_f_down[i, s_m, s_o, p] ** 2
-                                model.voltage_cons.add(e ** 2 + f ** 2 <= node.v_max ** 2 + slack_v_up_sqr)
-                                model.voltage_cons.add(e ** 2 + f ** 2 >= node.v_min ** 2 - slack_v_down_sqr)
-                            else:
-                                model.voltage_cons.add(pe.inequality(node.v_min ** 2, e ** 2 + f ** 2, node.v_max ** 2))
-        elif node.type == BUS_PQ:
-            for s_m in model.scenarios_market:
-                for s_o in model.scenarios_operation:
-                    for p in model.periods:
-                        e = model.e[i, s_m, s_o, p]
-                        f = model.f[i, s_m, s_o, p]
-                        if params.slack_voltage_limits:
-                            slack_v_up_sqr = model.slack_e_up[i, s_m, s_o, p] ** 2 + model.slack_f_up[i, s_m, s_o, p] ** 2
-                            slack_v_down_sqr = model.slack_e_down[i, s_m, s_o, p] ** 2 + model.slack_f_down[i, s_m, s_o, p] ** 2
-                            model.voltage_cons.add(e ** 2 + f ** 2 <= node.v_max ** 2 + slack_v_up_sqr)
-                            model.voltage_cons.add(e ** 2 + f ** 2 >= node.v_min ** 2 - slack_v_down_sqr)
+                                model.voltage_cons.add(model.vmag_sqr[i, s_m, s_o, p] - vg[p] ** 2 <= model.penalty_gen_vg[i, s_m, s_o, p])
                         else:
-                            model.voltage_cons.add(pe.inequality(node.v_min ** 2, e ** 2 + f ** 2, node.v_max ** 2))
+                            model.voltage_cons.add(model.vmag_sqr[i, s_m, s_o, p] <= node.v_max ** 2)
+                            model.voltage_cons.add(model.vmag_sqr[i, s_m, s_o, p] >= node.v_min ** 2)
+                            if params.relaxed_model:
+                                model.penalty_gen_vg[i, s_m, s_o, p].fix(0.00)
+                    elif node.type == BUS_PQ:
+                        model.voltage_cons.add(model.vmag_sqr[i, s_m, s_o, p] <= node.v_max ** 2)
+                        model.voltage_cons.add(model.vmag_sqr[i, s_m, s_o, p] >= node.v_min ** 2)
+                        if params.relaxed_model:
+                            model.penalty_gen_vg[i, s_m, s_o, p].fix(0.00)
 
     # - Flexible Loads -- Daily energy balance
     if params.fl_reg:
@@ -723,10 +721,8 @@ def _build_model(network, params):
                                 Pg -= model.pg_curt[g, s_m, s_o, p]
                             Qg += model.qg[g, s_m, s_o, p]
 
-                    ei, fi = model.e[i, s_m, s_o, p], model.f[i, s_m, s_o, p]
-                    if params.slack_voltage_limits:
-                        ei += model.slack_e_up[i, s_m, s_o, p] - model.slack_e_down[i, s_m, s_o, p]
-                        fi += model.slack_f_up[i, s_m, s_o, p] - model.slack_f_down[i, s_m, s_o, p]
+                    ei = model.e_actual[i, s_m, s_o, p]
+                    fi = model.f_actual[i, s_m, s_o, p]
 
                     Pi = node.gs * (ei ** 2 + fi ** 2)
                     Qi = -node.bs * (ei ** 2 + fi ** 2)
@@ -740,14 +736,11 @@ def _build_model(network, params):
 
                                 fnode_idx = network.get_node_idx(branch.fbus)
                                 tnode_idx = network.get_node_idx(branch.tbus)
-                                ei, fi = model.e[fnode_idx, s_m, s_o, p], model.f[fnode_idx, s_m, s_o, p]
-                                ej, fj = model.e[tnode_idx, s_m, s_o, p], model.f[tnode_idx, s_m, s_o, p]
 
-                                if params.slack_voltage_limits:
-                                    ei += model.slack_e_up[fnode_idx, s_m, s_o, p] - model.slack_e_down[fnode_idx, s_m, s_o, p]
-                                    fi += model.slack_f_up[fnode_idx, s_m, s_o, p] - model.slack_f_down[fnode_idx, s_m, s_o, p]
-                                    ej += model.slack_e_up[tnode_idx, s_m, s_o, p] - model.slack_e_down[tnode_idx, s_m, s_o, p]
-                                    fj += model.slack_f_up[tnode_idx, s_m, s_o, p] - model.slack_f_down[tnode_idx, s_m, s_o, p]
+                                ei = model.e_actual[fnode_idx, s_m, s_o, p]
+                                fi = model.f_actual[fnode_idx, s_m, s_o, p]
+                                ej = model.e_actual[tnode_idx, s_m, s_o, p]
+                                fj = model.f_actual[tnode_idx, s_m, s_o, p]
 
                                 Pi += branch.g * (ei ** 2 + fi ** 2) * rij**2
                                 Pi -= rij * (branch.g * (ei * ej + fi * fj) + branch.b * (fi * ej - ei * fj))
@@ -757,14 +750,11 @@ def _build_model(network, params):
 
                                 fnode_idx = network.get_node_idx(branch.tbus)
                                 tnode_idx = network.get_node_idx(branch.fbus)
-                                ei, fi = model.e[fnode_idx, s_m, s_o, p], model.f[fnode_idx, s_m, s_o, p]
-                                ej, fj = model.e[tnode_idx, s_m, s_o, p], model.f[tnode_idx, s_m, s_o, p]
 
-                                if params.slack_voltage_limits:
-                                    ei += model.slack_e_up[fnode_idx, s_m, s_o, p] - model.slack_e_down[fnode_idx, s_m, s_o, p]
-                                    fi += model.slack_f_up[fnode_idx, s_m, s_o, p] - model.slack_f_down[fnode_idx, s_m, s_o, p]
-                                    ej += model.slack_e_up[tnode_idx, s_m, s_o, p] - model.slack_e_down[tnode_idx, s_m, s_o, p]
-                                    fj += model.slack_f_up[tnode_idx, s_m, s_o, p] - model.slack_f_down[tnode_idx, s_m, s_o, p]
+                                ei = model.e_actual[fnode_idx, s_m, s_o, p]
+                                fi = model.f_actual[fnode_idx, s_m, s_o, p]
+                                ej = model.e_actual[tnode_idx, s_m, s_o, p]
+                                fj = model.f_actual[tnode_idx, s_m, s_o, p]
 
                                 Pi += branch.g * (ei ** 2 + fi ** 2)
                                 Pi -= rij * (branch.g * (ei * ej + fi * fj) + branch.b * (fi * ej - ei * fj))
@@ -791,15 +781,10 @@ def _build_model(network, params):
                     fnode_idx = network.get_node_idx(branch.fbus)
                     tnode_idx = network.get_node_idx(branch.tbus)
 
-                    ei = model.e[fnode_idx, s_m, s_o, p]
-                    fi = model.f[fnode_idx, s_m, s_o, p]
-                    ej = model.e[tnode_idx, s_m, s_o, p]
-                    fj = model.f[tnode_idx, s_m, s_o, p]
-                    if params.slack_voltage_limits:
-                        ei += model.slack_e_up[fnode_idx, s_m, s_o, p] - model.slack_e_down[fnode_idx, s_m, s_o, p]
-                        fi += model.slack_f_up[fnode_idx, s_m, s_o, p] - model.slack_f_down[fnode_idx, s_m, s_o, p]
-                        ej += model.slack_e_up[tnode_idx, s_m, s_o, p] - model.slack_e_down[tnode_idx, s_m, s_o, p]
-                        fj += model.slack_f_up[tnode_idx, s_m, s_o, p] - model.slack_f_down[tnode_idx, s_m, s_o, p]
+                    ei = model.e_actual[fnode_idx, s_m, s_o, p]
+                    fi = model.f_actual[fnode_idx, s_m, s_o, p]
+                    ej = model.e_actual[tnode_idx, s_m, s_o, p]
+                    fj = model.f_actual[tnode_idx, s_m, s_o, p]
 
                     iij_sqr = (branch.g**2 + branch.b**2) * ((ei - ej)**2 + (fi - fj)**2)
 
@@ -828,13 +813,7 @@ def _build_model(network, params):
                         omega_o = network.prob_operation_scenarios[s_o]
                         expected_pf_p += model.pc[node_idx, s_m, s_o, p] * omega_m * omega_o
                         expected_pf_q += model.qc[node_idx, s_m, s_o, p] * omega_m * omega_o
-                        ei = model.e[node_idx, s_m, s_o, p]
-                        fi = model.f[node_idx, s_m, s_o, p]
-                        if params.slack_voltage_limits:
-                            ei += model.slack_e_up[node_idx, s_m, s_o, p] - model.slack_e_down[node_idx, s_m, s_o, p]
-                            fi += model.slack_f_up[node_idx, s_m, s_o, p] - model.slack_f_down[node_idx, s_m, s_o, p]
-                        expected_vmag_sqr += (ei ** 2 + fi ** 2) * omega_m * omega_o
-
+                        expected_vmag_sqr += model.vmag_sqr[node_idx, s_m, s_o, p] * omega_m * omega_o
                 model.expected_interface_pf.add(model.expected_interface_pf_p[dn, p] - expected_pf_p >= -SMALL_TOLERANCE)       # Note: helps with convergence (numerical issues)
                 model.expected_interface_pf.add(model.expected_interface_pf_p[dn, p] - expected_pf_p <= SMALL_TOLERANCE)
                 model.expected_interface_pf.add(model.expected_interface_pf_q[dn, p] - expected_pf_q >= -SMALL_TOLERANCE)
@@ -854,7 +833,7 @@ def _build_model(network, params):
                     omega_s = network.prob_operation_scenarios[s_o]
                     expected_pf_p += model.pg[ref_gen_idx, s_m, s_o, p] * omega_m * omega_s
                     expected_pf_q += model.qg[ref_gen_idx, s_m, s_o, p] * omega_m * omega_s
-                    expected_vmag_sqr += (model.e[ref_node_idx, s_m, s_o, p] ** 2) * omega_m * omega_s
+                    expected_vmag_sqr += model.vmag_sqr[ref_node_idx, s_m, s_o, p] * omega_m * omega_s
 
             model.expected_interface_pf.add(model.expected_interface_pf_p[p] - expected_pf_p >= -SMALL_TOLERANCE)
             model.expected_interface_pf.add(model.expected_interface_pf_p[p] - expected_pf_p <= SMALL_TOLERANCE)
@@ -1702,12 +1681,9 @@ def _process_results(network, model, params, results=dict()):
                 processed_results['scenarios'][s_m][s_o]['voltage']['vmag'][node_id] = []
                 processed_results['scenarios'][s_m][s_o]['voltage']['vang'][node_id] = []
                 for p in model.periods:
-                    e = pe.value(model.e[i, s_m, s_o, p])
-                    f = pe.value(model.f[i, s_m, s_o, p])
-                    if params.slack_voltage_limits:
-                        e += pe.value(model.slack_e_up[i, s_m, s_o, p] - model.slack_e_down[i, s_m, s_o, p])
-                        f += pe.value(model.slack_f_up[i, s_m, s_o, p] - model.slack_f_down[i, s_m, s_o, p])
-                    v_mag = sqrt(e ** 2 + f ** 2)
+                    e = pe.value(model.e_actual[i, s_m, s_o, p])
+                    f = pe.value(model.f_actual[i, s_m, s_o, p])
+                    v_mag = sqrt(pe.value(model.vmag_sqr[i, s_m, s_o, p]))
                     v_ang = atan2(f, e) * (180.0 / pi)
                     processed_results['scenarios'][s_m][s_o]['voltage']['vmag'][node_id].append(v_mag)
                     processed_results['scenarios'][s_m][s_o]['voltage']['vang'][node_id].append(v_ang)
@@ -2233,15 +2209,10 @@ def _get_branch_power_flow(network, params, branch, fbus, tbus, model, s_m, s_o,
         direction = 0
 
     rij = 1 / pe.value(model.r[branch_idx, s_m, s_o, p])
-    ei = pe.value(model.e[fbus_idx, s_m, s_o, p])
-    fi = pe.value(model.f[fbus_idx, s_m, s_o, p])
-    ej = pe.value(model.e[tbus_idx, s_m, s_o, p])
-    fj = pe.value(model.f[tbus_idx, s_m, s_o, p])
-    if params.slack_voltage_limits:
-        ei += pe.value(model.slack_e_up[fbus_idx, s_m, s_o, p] - model.slack_e_down[fbus_idx, s_m, s_o, p])
-        fi += pe.value(model.slack_f_up[fbus_idx, s_m, s_o, p] - model.slack_f_down[fbus_idx, s_m, s_o, p])
-        ej += pe.value(model.slack_e_up[tbus_idx, s_m, s_o, p] - model.slack_e_down[tbus_idx, s_m, s_o, p])
-        fj += pe.value(model.slack_f_up[tbus_idx, s_m, s_o, p] - model.slack_f_down[tbus_idx, s_m, s_o, p])
+    ei = pe.value(model.e_actual[fbus_idx, s_m, s_o, p])
+    fi = pe.value(model.f_actual[fbus_idx, s_m, s_o, p])
+    ej = pe.value(model.e_actual[tbus_idx, s_m, s_o, p])
+    fj = pe.value(model.f_actual[tbus_idx, s_m, s_o, p])
 
     if direction:
         pij = branch.g * (ei ** 2 + fi ** 2) * rij**2
