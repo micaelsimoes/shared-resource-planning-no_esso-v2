@@ -222,10 +222,6 @@ def _build_model(network, params):
                             model.e[i, s_m, s_o, p].setub(e_ub)
                             model.f[i, s_m, s_o, p].fix(0.0)
                             if params.slack_voltage_limits:
-                                model.slack_e_up[i, s_m, s_o, p].setlb(e_lb)
-                                model.slack_e_up[i, s_m, s_o, p].setub(e_ub)
-                                model.slack_e_down[i, s_m, s_o, p].setlb(e_lb)
-                                model.slack_e_down[i, s_m, s_o, p].setub(e_ub)
                                 model.slack_f_up[i, s_m, s_o, p].fix(0.0)
                                 model.slack_f_down[i, s_m, s_o, p].fix(0.0)
             else:
@@ -249,15 +245,6 @@ def _build_model(network, params):
                         model.e[i, s_m, s_o, p].setub(e_ub)
                         model.f[i, s_m, s_o, p].setlb(f_lb)
                         model.f[i, s_m, s_o, p].setub(f_ub)
-                        if params.slack_voltage_limits:
-                            model.slack_e_up[i, s_m, s_o, p].setlb(e_lb)
-                            model.slack_e_up[i, s_m, s_o, p].setub(e_ub)
-                            model.slack_e_down[i, s_m, s_o, p].setlb(e_lb)
-                            model.slack_e_down[i, s_m, s_o, p].setub(e_ub)
-                            model.slack_f_up[i, s_m, s_o, p].setlb(f_lb)
-                            model.slack_f_up[i, s_m, s_o, p].setub(f_ub)
-                            model.slack_f_down[i, s_m, s_o, p].setlb(f_lb)
-                            model.slack_f_down[i, s_m, s_o, p].setub(f_ub)
 
     # - Generation
     model.pg = pe.Var(model.generators, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
