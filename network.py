@@ -1142,7 +1142,6 @@ def _run_smopf(network, model, params, from_warm_start=False):
         #solver.options['nlp_scaling_method'] = 'none'
         solver.options['max_iter'] = 10000
         solver.options['linear_solver'] = params.solver_params.linear_solver
-        solver.options['derivative_test'] = "second-order"
 
     result = solver.solve(model, tee=params.solver_params.verbose)
 
