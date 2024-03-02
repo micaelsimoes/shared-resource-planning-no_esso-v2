@@ -772,7 +772,7 @@ def _build_model(network, params):
                     model.branch_power_flow_cons.add(model.iij_sqr[b, s_m, s_o, p] - iij_sqr <= SMALL_TOLERANCE)
 
                     if params.slack_line_limits:
-                        model.branch_power_flow_lims.add(model.iij_sqr[b, s_m, s_o, p] <= rating**2 + model.slack_iij_sqr[b, s_m, s_o, p])
+                        model.branch_power_flow_lims.add(model.iij_sqr[b, s_m, s_o, p] - rating**2 <= model.slack_iij_sqr[b, s_m, s_o, p])
                     else:
                         model.branch_power_flow_lims.add(model.iij_sqr[b, s_m, s_o, p] <= rating**2)
 
