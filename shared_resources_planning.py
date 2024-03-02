@@ -801,7 +801,7 @@ def _update_shared_energy_storage_variables(planning_problem, tso_model, dso_mod
                 day = repr_days[d]
                 s_base = transmission_network.network[year][day].baseMVA
                 shared_ess_idx = transmission_network.network[year][day].get_shared_energy_storage_idx(node_id)
-                s_rated = tso_model[year][day].shared_es_s_rated_fixed[shared_ess_idx] * s_base
+                s_rated = pe.value(tso_model[year][day].shared_es_s_rated_fixed[shared_ess_idx]) * s_base
                 shared_ess_vars['tso'][node_id][year][day]['p'] = [0.0 for _ in range(planning_problem.num_instants)]
                 shared_ess_vars['tso'][node_id][year][day]['q'] = [0.0 for _ in range(planning_problem.num_instants)]
                 for p in tso_model[year][day].periods:
@@ -818,7 +818,7 @@ def _update_shared_energy_storage_variables(planning_problem, tso_model, dso_mod
                 s_base = distribution_network.network[year][day].baseMVA
                 ref_node_id = distribution_network.network[year][day].get_reference_node_id()
                 shared_ess_idx = distribution_network.network[year][day].get_shared_energy_storage_idx(ref_node_id)
-                s_rated = dso_model[year][day].shared_es_s_rated_fixed[shared_ess_idx] * s_base
+                s_rated = pe.value(dso_model[year][day].shared_es_s_rated_fixed[shared_ess_idx]) * s_base
                 shared_ess_vars['dso'][node_id][year][day]['p'] = [0.0 for _ in range(planning_problem.num_instants)]
                 shared_ess_vars['dso'][node_id][year][day]['q'] = [0.0 for _ in range(planning_problem.num_instants)]
                 for p in dso_model[year][day].periods:
