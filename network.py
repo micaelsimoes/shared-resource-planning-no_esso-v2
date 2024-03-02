@@ -1647,7 +1647,7 @@ def _process_results(network, model, params, results=dict()):
                 for p in model.periods:
                     e = pe.value(model.e_actual[i, s_m, s_o, p])
                     f = pe.value(model.f_actual[i, s_m, s_o, p])
-                    v_mag = sqrt(pe.value(model.vmag_sqr[i, s_m, s_o, p]))
+                    v_mag = sqrt(e**2 + f**2)
                     v_ang = atan2(f, e) * (180.0 / pi)
                     processed_results['scenarios'][s_m][s_o]['voltage']['vmag'][node_id].append(v_mag)
                     processed_results['scenarios'][s_m][s_o]['voltage']['vang'][node_id].append(v_ang)
