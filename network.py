@@ -209,13 +209,15 @@ def _build_model(network, params):
         model.slack_f_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
     for i in model.nodes:
         node = network.nodes[i]
+        ref_gen_idx = network.get_gen_idx(node.bus_i)
+        vg = network.generators[ref_gen_idx].vg
         e_lb, e_ub = -node.v_max, node.v_max
         f_lb, f_ub = -node.v_max, node.v_max
-        if node.type == BUS_REF:
-            if network.is_transmission:
-                for s_m in model.scenarios_market:
-                    for s_o in model.scenarios_operation:
-                        for p in model.periods:
+        for s_m in model.scenarios_market:
+            for s_o in model.scenarios_operation:
+                for p in model.periods:
+                    if node.type == BUS_REF:
+                        if network.is_transmission:
                             model.e[i, s_m, s_o, p].setlb(e_lb)
                             model.e[i, s_m, s_o, p].setub(e_ub)
                             model.f[i, s_m, s_o, p].fix(0.0)
@@ -226,12 +228,7 @@ def _build_model(network, params):
                                 model.slack_e_down[i, s_m, s_o, p].setub(e_ub)
                                 model.slack_f_up[i, s_m, s_o, p].fix(0.0)
                                 model.slack_f_down[i, s_m, s_o, p].fix(0.0)
-            else:
-                ref_gen_idx = network.get_gen_idx(node.bus_i)
-                vg = network.generators[ref_gen_idx].vg
-                for s_m in model.scenarios_market:
-                    for s_o in model.scenarios_operation:
-                        for p in model.periods:
+                        else:
                             model.e[i, s_m, s_o, p].fix(vg)
                             model.f[i, s_m, s_o, p].fix(0.0)
                             if params.slack_voltage_limits:
@@ -240,22 +237,19 @@ def _build_model(network, params):
                                 model.slack_f_up[i, s_m, s_o, p].fix(0.0)
                                 model.slack_f_down[i, s_m, s_o, p].fix(0.0)
         else:
-            for s_m in model.scenarios_market:
-                for s_o in model.scenarios_operation:
-                    for p in model.periods:
-                        model.e[i, s_m, s_o, p].setlb(e_lb)
-                        model.e[i, s_m, s_o, p].setub(e_ub)
-                        model.f[i, s_m, s_o, p].setlb(f_lb)
-                        model.f[i, s_m, s_o, p].setub(f_ub)
-                        if params.slack_voltage_limits:
-                            model.slack_e_up[i, s_m, s_o, p].setlb(e_lb)
-                            model.slack_e_up[i, s_m, s_o, p].setub(e_ub)
-                            model.slack_e_down[i, s_m, s_o, p].setlb(e_lb)
-                            model.slack_e_down[i, s_m, s_o, p].setub(e_ub)
-                            model.slack_f_up[i, s_m, s_o, p].setlb(f_lb)
-                            model.slack_f_up[i, s_m, s_o, p].setub(f_ub)
-                            model.slack_f_down[i, s_m, s_o, p].setlb(f_lb)
-                            model.slack_f_down[i, s_m, s_o, p].setub(f_ub)
+            model.e[i, s_m, s_o, p].setlb(e_lb)
+            model.e[i, s_m, s_o, p].setub(e_ub)
+            model.f[i, s_m, s_o, p].setlb(f_lb)
+            model.f[i, s_m, s_o, p].setub(f_ub)
+            if params.slack_voltage_limits:
+                model.slack_e_up[i, s_m, s_o, p].setlb(e_lb)
+                model.slack_e_up[i, s_m, s_o, p].setub(e_ub)
+                model.slack_e_down[i, s_m, s_o, p].setlb(e_lb)
+                model.slack_e_down[i, s_m, s_o, p].setub(e_ub)
+                model.slack_f_up[i, s_m, s_o, p].setlb(f_lb)
+                model.slack_f_up[i, s_m, s_o, p].setub(f_ub)
+                model.slack_f_down[i, s_m, s_o, p].setlb(f_lb)
+                model.slack_f_down[i, s_m, s_o, p].setub(f_ub)
 
     # - Generation
     model.pg = pe.Var(model.generators, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
