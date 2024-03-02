@@ -804,7 +804,7 @@ def _build_model(network, params):
                 '''
                 model.expected_interface_pf.add(model.expected_interface_pf_p[dn, p] - expected_pf_p <= model.penalty_expected_interface_pf_p[dn, p])
                 model.expected_interface_pf.add(model.expected_interface_pf_q[dn, p] - expected_pf_q <= model.penalty_expected_interface_pf_q[dn, p])
-                model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[dn, p] - expected_vmag_sqr <= model.expected_interface_vmag_sqr[dn, p])
+                model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[dn, p] - expected_vmag_sqr <= model.penalty_expected_interface_vmag_sqr[dn, p])
     else:
         ref_node_idx = network.get_node_idx(ref_node_id)
         ref_gen_idx = network.get_reference_gen_idx()
@@ -972,7 +972,7 @@ def _build_model(network, params):
                 for p in model.periods:
                     obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_p[dn, p]
                     obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_q[dn, p]
-                    obj += PENALTY_ESS_SLACK * model.expected_interface_vmag_sqr[dn, p]
+                    obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_vmag_sqr[dn, p]
             for e in model.shared_energy_storages:
                 for p in model.periods:
                     obj += PENALTY_ESS_SLACK * model.penalty_expected_shared_ess_p[e, p]
@@ -981,7 +981,7 @@ def _build_model(network, params):
             for p in model.periods:
                 obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_p[p]
                 obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_q[p]
-                obj += PENALTY_ESS_SLACK * model.expected_interface_vmag_sqr[p]
+                obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_vmag_sqr[p]
             for p in model.periods:
                 obj += PENALTY_ESS_SLACK * model.penalty_expected_shared_ess_p[p]
                 obj += PENALTY_ESS_SLACK * model.penalty_expected_shared_ess_q[p]
