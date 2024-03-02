@@ -204,7 +204,7 @@ def _build_model(network, params):
     model.f = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
     model.e_actual = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=1.0)
     model.f_actual = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
-    model.vmag_sqr = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=1.0)
+    #model.vmag_sqr = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=1.0)
     if params.slack_voltage_limits:
         model.slack_e_up = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
         model.slack_e_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.00)
@@ -481,10 +481,12 @@ def _build_model(network, params):
                     model.voltage_definitions.add(model.f_actual[i, s_m, s_o, p] - f_actual <= SMALL_TOLERANCE)
                     model.voltage_definitions.add(model.f_actual[i, s_m, s_o, p] - f_actual >= -SMALL_TOLERANCE)
 
+                    '''
                     # Define vmag_sqr
                     vmag_sqr = model.e_actual[i, s_m, s_o, p] ** 2 + model.f_actual[i, s_m, s_o, p] ** 2
                     model.voltage_definitions.add(model.vmag_sqr[i, s_m, s_o, p] - vmag_sqr <= SMALL_TOLERANCE)
                     model.voltage_definitions.add(model.vmag_sqr[i, s_m, s_o, p] - vmag_sqr >= -SMALL_TOLERANCE)
+                    '''
 
                     # Voltage magnitude restrictions
                     if node.type == BUS_PV:
@@ -794,11 +796,14 @@ def _build_model(network, params):
 
                     model.branch_power_flow_cons.add(model.iij_sqr[b, s_m, s_o, p] - iij_sqr >= -SMALL_TOLERANCE)
                     model.branch_power_flow_cons.add(model.iij_sqr[b, s_m, s_o, p] - iij_sqr <= SMALL_TOLERANCE)
+                    model.branch_power_flow_lims.add(model.iij_sqr[b, s_m, s_o, p] <= rating**2)
 
+                    '''
                     if params.slack_line_limits:
                         model.branch_power_flow_lims.add(model.iij_sqr[b, s_m, s_o, p] - model.slack_iij_sqr[b, s_m, s_o, p] <= rating**2)
                     else:
                         model.branch_power_flow_lims.add(model.iij_sqr[b, s_m, s_o, p] <= rating**2)
+                    '''
 
     # - Expected Interface Power Flow (explicit definition)
     model.expected_interface_pf = pe.ConstraintList()
@@ -817,7 +822,8 @@ def _build_model(network, params):
                         omega_o = network.prob_operation_scenarios[s_o]
                         expected_pf_p += model.pc[node_idx, s_m, s_o, p] * omega_m * omega_o
                         expected_pf_q += model.qc[node_idx, s_m, s_o, p] * omega_m * omega_o
-                        expected_vmag_sqr += model.vmag_sqr[node_idx, s_m, s_o, p] * omega_m * omega_o
+                        #expected_vmag_sqr += model.vmag_sqr[node_idx, s_m, s_o, p] * omega_m * omega_o
+                        expected_vmag_sqr += (model.e_actual[node_idx, s_m, s_o, p] ** 2 + model.f_actual[node_idx, s_m, s_o, p] ** 2) * omega_m * omega_o
                 model.expected_interface_pf.add(model.expected_interface_pf_p[dn, p] - expected_pf_p >= -SMALL_TOLERANCE)       # Note: helps with convergence (numerical issues)
                 model.expected_interface_pf.add(model.expected_interface_pf_p[dn, p] - expected_pf_p <= SMALL_TOLERANCE)
                 model.expected_interface_pf.add(model.expected_interface_pf_q[dn, p] - expected_pf_q >= -SMALL_TOLERANCE)
@@ -837,7 +843,8 @@ def _build_model(network, params):
                     omega_s = network.prob_operation_scenarios[s_o]
                     expected_pf_p += model.pg[ref_gen_idx, s_m, s_o, p] * omega_m * omega_s
                     expected_pf_q += model.qg[ref_gen_idx, s_m, s_o, p] * omega_m * omega_s
-                    expected_vmag_sqr += model.vmag_sqr[ref_node_idx, s_m, s_o, p] * omega_m * omega_s
+                    #expected_vmag_sqr += model.vmag_sqr[ref_node_idx, s_m, s_o, p] * omega_m * omega_s
+                    expected_vmag_sqr += (model.e_actual[ref_node_idx, s_m, s_o, p] ** 2 + model.f_actual[ref_node_idx, s_m, s_o, p] ** 2) * omega_m * omega_s
 
             model.expected_interface_pf.add(model.expected_interface_pf_p[p] - expected_pf_p >= -SMALL_TOLERANCE)
             model.expected_interface_pf.add(model.expected_interface_pf_p[p] - expected_pf_p <= SMALL_TOLERANCE)
