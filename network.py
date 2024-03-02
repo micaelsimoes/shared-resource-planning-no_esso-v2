@@ -569,8 +569,8 @@ def _build_model(network, params):
                             model.energy_storage_ch_dch_exclusion.add(sch * sdch <= model.es_penalty[e, s_m, s_o, p])
                         else:
                             # NLP formulation
-                            model.energy_storage_ch_dch_exclusion.add(sch * sdch >= -(1/s_base**2) * SMALL_TOLERANCE)   # Note: helps with convergence
-                            model.energy_storage_ch_dch_exclusion.add(sch * sdch <= (1/s_base**2) * SMALL_TOLERANCE)
+                            model.energy_storage_ch_dch_exclusion.add(sch * sdch >= -(1/s_base) * SMALL_TOLERANCE)   # Note: helps with convergence
+                            model.energy_storage_ch_dch_exclusion.add(sch * sdch <= (1/s_base) * SMALL_TOLERANCE)
 
                     model.energy_storage_day_balance.add(model.es_soc[e, s_m, s_o, len(model.periods) - 1] - soc_final >= -SMALL_TOLERANCE)
                     model.energy_storage_day_balance.add(model.es_soc[e, s_m, s_o, len(model.periods) - 1] - soc_final <= SMALL_TOLERANCE)
