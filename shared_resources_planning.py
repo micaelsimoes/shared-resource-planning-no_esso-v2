@@ -358,6 +358,15 @@ def _run_operational_planning_problem(operational_planning_problem):
 
         # --------------------------------------------------------------------------------------------------------------
         # 3. Solve DSOs problems
+        for node_id in consensus_vars['interface']['pf']['tso']:
+            print(f'Node {node_id}:')
+            for year in consensus_vars['interface']['pf']['tso'][node_id]:
+                print(f'\tYear {year}:')
+                for day in consensus_vars['interface']['pf']['tso'][node_id][year]:
+                    print(f'\t\tDay {day}:')
+                    print(f"\t\t\tP = {consensus_vars['interface']['pf']['tso'][node_id][year][day]['p']}")
+                    print(f"\t\t\tQ = {consensus_vars['interface']['pf']['tso'][node_id][year][day]['q']}")
+
         results['dso'] = update_distribution_coordination_models_and_solve(distribution_networks, dso_models,
                                                                            consensus_vars['interface']['v'],
                                                                            consensus_vars['interface']['pf']['tso'], dual_vars['pf']['dso'],
