@@ -802,8 +802,8 @@ def _build_model(network, params):
                 model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[dn, p] - expected_vmag_sqr >= -SMALL_TOLERANCE)
                 model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[dn, p] - expected_vmag_sqr <= SMALL_TOLERANCE)
                 '''
-                model.expected_interface_pf.add(model.expected_interface_pf_p[dn, p] - expected_pf_p < model.penalty_expected_interface_pf_p[dn, p])
-                model.expected_interface_pf.add(model.expected_interface_pf_q[dn, p] - expected_pf_q < model.penalty_expected_interface_pf_q[dn, p])
+                model.expected_interface_pf.add(model.expected_interface_pf_p[dn, p] - expected_pf_p <= model.penalty_expected_interface_pf_p[dn, p])
+                model.expected_interface_pf.add(model.expected_interface_pf_q[dn, p] - expected_pf_q <= model.penalty_expected_interface_pf_q[dn, p])
                 model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[dn, p] - expected_vmag_sqr <= model.expected_interface_vmag_sqr[dn, p])
     else:
         ref_node_idx = network.get_node_idx(ref_node_id)
