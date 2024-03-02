@@ -255,17 +255,13 @@ def _build_model(network, params):
     model.pg = pe.Var(model.generators, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
     model.qg = pe.Var(model.generators, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
     for g in model.generators:
-
         gen = network.generators[g]
-
-        if gen.is_controllable():
-
-            pg_ub, pg_lb = gen.pmax, gen.pmin
-            qg_ub, qg_lb = gen.qmax, gen.qmin
-
-            for s_m in model.scenarios_market:
-                for s_o in model.scenarios_operation:
-                    for p in model.periods:
+        pg_ub, pg_lb = gen.pmax, gen.pmin
+        qg_ub, qg_lb = gen.qmax, gen.qmin
+        for s_m in model.scenarios_market:
+            for s_o in model.scenarios_operation:
+                for p in model.periods:
+                    if gen.is_controllable():
                         if gen.status[p] == 1:
                             model.pg[g, s_m, s_o, p] = (pg_lb + pg_ub) * 0.50
                             model.qg[g, s_m, s_o, p] = (qg_lb + qg_ub) * 0.50
@@ -276,11 +272,8 @@ def _build_model(network, params):
                         else:
                             model.pg[g, s_m, s_o, p].fix(0.0)
                             model.qg[g, s_m, s_o, p].fix(0.0)
-        else:
-            # Non-conventional generator
-            for s_m in model.scenarios_market:
-                for s_o in model.scenarios_operation:
-                    for p in model.periods:
+                    else:
+                        # Non-conventional generator
                         init_pg = 0.0
                         init_qg = 0.0
                         if gen.status[p] == 1:
@@ -292,27 +285,21 @@ def _build_model(network, params):
         model.pg_curt = pe.Var(model.generators, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         for g in model.generators:
             gen = network.generators[g]
-            if gen.is_controllable():
-                for s_m in model.scenarios_market:
-                    for s_o in model.scenarios_operation:
-                        for p in model.periods:
+            for s_m in model.scenarios_market:
+                for s_o in model.scenarios_operation:
+                    for p in model.periods:
+                        if gen.is_controllable():
                             model.pg_curt[g, s_m, s_o, p].fix(0.0)
-            else:
-                if gen.is_curtaillable():
-                    # - Renewable Generation
-                    for s_m in model.scenarios_market:
-                        for s_o in model.scenarios_operation:
-                            for p in model.periods:
+                        else:
+                            if gen.is_curtaillable():
+                                # - Renewable Generation
                                 init_pg = 0.0
                                 if gen.status[p] == 1:
                                     init_pg = max(gen.pg[s_o][p], 0.0)
                                 model.pg_curt[g, s_m, s_o, p].setub(init_pg)
                 else:
                     # - Generator is not curtaillable (conventional RES, ref gen, etc.)
-                    for s_m in model.scenarios_market:
-                        for s_o in model.scenarios_operation:
-                            for p in model.periods:
-                                model.pg_curt[g, s_m, s_o, p].fix(0.0)
+                    model.pg_curt[g, s_m, s_o, p].fix(0.0)
 
     # - Branch current (squared)
     model.iij_sqr = pe.Var(model.branches, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
