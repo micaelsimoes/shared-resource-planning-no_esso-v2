@@ -385,10 +385,10 @@ def _build_model(network, params):
     if params.es_reg:
         model.es_soc = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals)
         model.es_sch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
-        model.es_pch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
+        model.es_pch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.es_qch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
         model.es_sdch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
-        model.es_pdch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
+        model.es_pdch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.es_qdch = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
         if params.ess_relax:
             model.es_penalty = pe.Var(model.energy_storages, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals)
@@ -402,12 +402,10 @@ def _build_model(network, params):
                         model.es_soc[e, s_m, s_o, p].setub(energy_storage.e_max)
                         model.es_sch[e, s_m, s_o, p].setub(energy_storage.s)
                         model.es_pch[e, s_m, s_o, p].setub(energy_storage.s)
-                        model.es_pch[e, s_m, s_o, p].setlb(-energy_storage.s)
                         model.es_qch[e, s_m, s_o, p].setub(energy_storage.s)
                         model.es_qch[e, s_m, s_o, p].setlb(-energy_storage.s)
                         model.es_sdch[e, s_m, s_o, p].setub(energy_storage.s)
                         model.es_pdch[e, s_m, s_o, p].setub(energy_storage.s)
-                        model.es_pdch[e, s_m, s_o, p].setlb(-energy_storage.s)
                         model.es_qdch[e, s_m, s_o, p].setub(energy_storage.s)
                         model.es_qdch[e, s_m, s_o, p].setlb(-energy_storage.s)
                         if params.ess_relax:
@@ -468,6 +466,8 @@ def _build_model(network, params):
         for s_m in model.scenarios_market:
             for s_o in model.scenarios_operation:
                 for p in model.periods:
+
+                    # e_actual and f_actual definition
                     e_actual = model.e[i, s_m, s_o, p]
                     f_actual = model.f[i, s_m, s_o, p]
                     if params.slack_voltage_limits:
@@ -477,38 +477,25 @@ def _build_model(network, params):
                         model.voltage_cons.add(model.e_actual[i, s_m, s_o, p] - e_actual >= -SMALL_TOLERANCE)
                         model.voltage_cons.add(model.f_actual[i, s_m, s_o, p] - f_actual <= SMALL_TOLERANCE)
                         model.voltage_cons.add(model.f_actual[i, s_m, s_o, p] - f_actual >= -SMALL_TOLERANCE)
-        if node.type == BUS_PV:
-            if params.enforce_vg:
-                # - Enforce voltage controlled bus
-                gen_idx = network.get_gen_idx(node.bus_i)
-                vg = network.generators[gen_idx].vg
-                for s_m in model.scenarios_market:
-                    for s_o in model.scenarios_operation:
-                        for p in model.periods:
-                            e = model.e[i, s_m, s_o, p]
-                            f = model.f[i, s_m, s_o, p]
-                            model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 >= -SMALL_TOLERANCE)
-                            model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= SMALL_TOLERANCE)
-            else:
-                # - Voltage at the bus is not controlled
-                for s_m in model.scenarios_market:
-                    for s_o in model.scenarios_operation:
-                        for p in model.periods:
-                            e = model.e[i, s_m, s_o, p]
-                            f = model.f[i, s_m, s_o, p]
-                            if params.slack_voltage_limits:
-                                slack_v_up_sqr = model.slack_e_up[i, s_m, s_o, p] ** 2 + model.slack_f_up[i, s_m, s_o, p] ** 2
-                                slack_v_down_sqr = model.slack_e_down[i, s_m, s_o, p] ** 2 + model.slack_f_down[i, s_m, s_o, p] ** 2
-                                model.voltage_cons.add(e ** 2 + f ** 2 <= node.v_max ** 2 + slack_v_up_sqr)
-                                model.voltage_cons.add(e ** 2 + f ** 2 >= node.v_min ** 2 - slack_v_down_sqr)
-                            else:
-                                model.voltage_cons.add(pe.inequality(node.v_min ** 2, e ** 2 + f ** 2, node.v_max ** 2))
-        elif node.type == BUS_PQ:
-            for s_m in model.scenarios_market:
-                for s_o in model.scenarios_operation:
-                    for p in model.periods:
-                        e = model.e[i, s_m, s_o, p]
-                        f = model.f[i, s_m, s_o, p]
+
+                    # voltage magnitude constraints
+                    if node.type == BUS_PV:
+                        if params.enforce_vg:
+                            # - Enforce voltage controlled bus
+                            gen_idx = network.get_gen_idx(node.bus_i)
+                            vg = network.generators[gen_idx].vg
+                            e = model.e_actual[i, s_m, s_o, p]
+                            f = model.e_actual[i, s_m, s_o, p]
+                            model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 >= -1e2 * SMALL_TOLERANCE)
+                            model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= 1e2 * SMALL_TOLERANCE)
+                        else:
+                            # - Voltage at the bus is not controlled
+                            e = model.e_actual[i, s_m, s_o, p]
+                            f = model.f_actual[i, s_m, s_o, p]
+                            model.voltage_cons.add(pe.inequality(node.v_min ** 2, e ** 2 + f ** 2, node.v_max ** 2))
+                    elif node.type == BUS_PQ:
+                        e = model.e_actual[i, s_m, s_o, p]
+                        f = model.f_actual[i, s_m, s_o, p]
                         if params.slack_voltage_limits:
                             slack_v_up_sqr = model.slack_e_up[i, s_m, s_o, p] ** 2 + model.slack_f_up[i, s_m, s_o, p] ** 2
                             slack_v_down_sqr = model.slack_e_down[i, s_m, s_o, p] ** 2 + model.slack_f_down[i, s_m, s_o, p] ** 2
@@ -529,8 +516,8 @@ def _build_model(network, params):
                         for p in model.periods:
                             p_up += model.flex_p_up[i, s_m, s_o, p]
                             p_down += model.flex_p_down[i, s_m, s_o, p]
-                        model.fl_p_balance.add(p_up - p_down >= -SMALL_TOLERANCE)   # Note: helps with convergence (numerical issues)
-                        model.fl_p_balance.add(p_up - p_down <= SMALL_TOLERANCE)
+                        model.fl_p_balance.add(p_up - p_down >= -1e2 * SMALL_TOLERANCE)   # Note: helps with convergence (numerical issues)
+                        model.fl_p_balance.add(p_up - p_down <= 1e2 * SMALL_TOLERANCE)
 
     # - Energy Storage constraints
     if params.es_reg:
@@ -665,8 +652,8 @@ def _build_model(network, params):
                 model.shared_energy_storage_day_balance.add(model.shared_es_soc[e, s_m, s_o, len(model.periods) - 1] - soc_final >= -SMALL_TOLERANCE)
                 model.shared_energy_storage_day_balance.add(model.shared_es_soc[e, s_m, s_o, len(model.periods) - 1] - soc_final <= SMALL_TOLERANCE)
 
-        model.shared_energy_storage_s_sensitivities.add(model.shared_es_s_rated[e] == model.shared_es_s_rated_fixed[e])
-        model.shared_energy_storage_e_sensitivities.add(model.shared_es_e_rated[e] == model.shared_es_e_rated_fixed[e])
+        model.shared_energy_storage_s_sensitivities.add(model.shared_es_s_rated[e] + model.shared_es_s_slack_up[e] - model.shared_es_s_slack_down[e] == model.shared_es_s_rated_fixed[e])
+        model.shared_energy_storage_e_sensitivities.add(model.shared_es_e_rated[e] + model.shared_es_e_slack_up[e] - model.shared_es_e_slack_down[e] == model.shared_es_e_rated_fixed[e])
 
     # - Node Balance constraints
     model.node_balance_cons_p = pe.ConstraintList()
@@ -771,7 +758,6 @@ def _build_model(network, params):
                     fj = model.f_actual[tnode_idx, s_m, s_o, p]
 
                     iij_sqr = (branch.g**2 + branch.b**2) * ((ei - ej)**2 + (fi - fj)**2)
-
                     model.branch_power_flow_cons.add(model.iij_sqr[b, s_m, s_o, p] - iij_sqr >= -SMALL_TOLERANCE)
                     model.branch_power_flow_cons.add(model.iij_sqr[b, s_m, s_o, p] - iij_sqr <= SMALL_TOLERANCE)
 
@@ -949,6 +935,10 @@ def _build_model(network, params):
 
                 obj += obj_scenario * omega_market * omega_oper
 
+        for e in model.shared_energy_storages:
+            obj += PENALTY_ESS_SLACK * (model.shared_es_s_slack_up[e] + model.shared_es_s_slack_down[e])
+            obj += PENALTY_ESS_SLACK * (model.shared_es_e_slack_up[e] + model.shared_es_e_slack_down[e])
+
         model.objective = pe.Objective(sense=pe.minimize, expr=obj)
 
     elif params.obj_type == OBJ_CONGESTION_MANAGEMENT:
@@ -1005,6 +995,10 @@ def _build_model(network, params):
                             obj_scenario += PENALTY_FLEX_LOAD_ENERGY_BALANCE_CONS * network.baseMVA * (p_up - p_down)
 
                 obj += obj_scenario * omega_market * omega_oper
+
+        for e in model.shared_energy_storages:
+            obj += PENALTY_ESS_SLACK * (model.shared_es_s_slack_up[e] + model.shared_es_s_slack_down[e])
+            obj += PENALTY_ESS_SLACK * (model.shared_es_e_slack_up[e] + model.shared_es_e_slack_down[e])
 
         model.objective = pe.Objective(sense=pe.minimize, expr=obj)
     else:
