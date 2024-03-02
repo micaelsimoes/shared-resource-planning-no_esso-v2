@@ -358,15 +358,6 @@ def _run_operational_planning_problem(operational_planning_problem):
 
         # --------------------------------------------------------------------------------------------------------------
         # 3. Solve DSOs problems
-        for node_id in consensus_vars['interface']['pf']['tso']:
-            print(f'Node {node_id}:')
-            for year in consensus_vars['interface']['pf']['tso'][node_id]:
-                print(f'\tYear {year}:')
-                for day in consensus_vars['interface']['pf']['tso'][node_id][year]:
-                    print(f'\t\tDay {day}:')
-                    print(f"\t\t\tP = {consensus_vars['interface']['pf']['tso'][node_id][year][day]['p']}")
-                    print(f"\t\t\tQ = {consensus_vars['interface']['pf']['tso'][node_id][year][day]['q']}")
-
         results['dso'] = update_distribution_coordination_models_and_solve(distribution_networks, dso_models,
                                                                            consensus_vars['interface']['v'],
                                                                            consensus_vars['interface']['pf']['tso'], dual_vars['pf']['dso'],
@@ -810,11 +801,14 @@ def _update_shared_energy_storage_variables(planning_problem, tso_model, dso_mod
                 day = repr_days[d]
                 s_base = transmission_network.network[year][day].baseMVA
                 shared_ess_idx = transmission_network.network[year][day].get_shared_energy_storage_idx(node_id)
+                s_rated = tso_model[year][day].shared_es_s_rated_fixed[shared_ess_idx] * s_base
                 shared_ess_vars['tso'][node_id][year][day]['p'] = [0.0 for _ in range(planning_problem.num_instants)]
                 shared_ess_vars['tso'][node_id][year][day]['q'] = [0.0 for _ in range(planning_problem.num_instants)]
                 for p in tso_model[year][day].periods:
-                    shared_ess_vars['tso'][node_id][year][day]['p'][p] = pe.value(tso_model[year][day].expected_shared_ess_p[shared_ess_idx, p]) * s_base
-                    shared_ess_vars['tso'][node_id][year][day]['q'][p] = pe.value(tso_model[year][day].expected_shared_ess_q[shared_ess_idx, p]) * s_base
+                    shared_ess_p = pe.value(tso_model[year][day].expected_shared_ess_p[shared_ess_idx, p]) * s_base
+                    shared_ess_q = pe.value(tso_model[year][day].expected_shared_ess_q[shared_ess_idx, p]) * s_base
+                    shared_ess_vars['tso'][node_id][year][day]['p'][p] = min(s_rated, max(shared_ess_p, 0.00))
+                    shared_ess_vars['tso'][node_id][year][day]['q'][p] = min(s_rated, max(shared_ess_q, 0.00))
 
         # Shared Energy Storage - Power requested by DSO
         for y in range(len(planning_problem.years)):
@@ -822,18 +816,16 @@ def _update_shared_energy_storage_variables(planning_problem, tso_model, dso_mod
             for d in range(len(repr_days)):
                 day = repr_days[d]
                 s_base = distribution_network.network[year][day].baseMVA
+                ref_node_id = distribution_network.network[year][day].get_reference_node_id()
+                shared_ess_idx = distribution_network.network[year][day].get_shared_energy_storage_idx(ref_node_id)
+                s_rated = dso_model[year][day].shared_es_s_rated_fixed[shared_ess_idx] * s_base
                 shared_ess_vars['dso'][node_id][year][day]['p'] = [0.0 for _ in range(planning_problem.num_instants)]
                 shared_ess_vars['dso'][node_id][year][day]['q'] = [0.0 for _ in range(planning_problem.num_instants)]
                 for p in dso_model[year][day].periods:
-                    shared_ess_vars['dso'][node_id][year][day]['p'][p] = pe.value(dso_model[year][day].expected_shared_ess_p[p]) * s_base
-                    shared_ess_vars['dso'][node_id][year][day]['q'][p] = pe.value(dso_model[year][day].expected_shared_ess_q[p]) * s_base
-
-        '''
-        for year in planning_problem.years:
-            for day in planning_problem.days:
-                print(f"Preq, TN, Node {node_id}, {year}, {day} = {shared_ess_vars['tso'][node_id][year][day]['p']}")
-                print(f"Preq, DN, Node {node_id}, {year}, {day} = {shared_ess_vars['dso'][node_id][year][day]['p']}")
-        '''
+                    shared_ess_p = pe.value(dso_model[year][day].expected_shared_ess_p[p]) * s_base
+                    shared_ess_q = pe.value(dso_model[year][day].expected_shared_ess_q[p]) * s_base
+                    shared_ess_vars['dso'][node_id][year][day]['p'][p] = min(s_rated, max(shared_ess_p, 0.00))
+                    shared_ess_vars['dso'][node_id][year][day]['q'][p] = min(s_rated, max(shared_ess_q, 0.00))
 
         # Update dual variables Shared ESS
         for year in planning_problem.years:
