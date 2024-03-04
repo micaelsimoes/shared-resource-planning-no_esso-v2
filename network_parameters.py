@@ -16,11 +16,11 @@ class NetworkParameters:
         self.rg_curt = False
         self.l_curt = False
         self.relaxed_model = False
-        self.ess_relax = False
-        self.fl_relax = False
         self.enforce_vg = False
         self.slack_line_limits = False
         self.slack_voltage_limits = False
+        self.ess_relax = False
+        self.fl_relax = False
         self.print_to_screen = False
         self.plot_diagram = False
         self.print_results_to_file = False
