@@ -60,7 +60,8 @@ def shared_resources_planning(working_directory, specification_filename):
     planning_problem = SharedResourcesPlanning(working_directory, specification_filename)
     planning_problem.read_planning_problem()
 
-    #planning_problem.run_operational_planning()
+    candidate_solution = planning_problem.get_initial_candidate_solution()
+    planning_problem.run_operational_planning(candidate_solution=candidate_solution)
 
     #planning_problem.run_planning_problem()
     #candidate_solution = planning_problem.get_initial_candidate_solution()
@@ -77,6 +78,7 @@ def shared_resources_planning(working_directory, specification_filename):
     transmission_network.write_optimization_results_to_excel(processed_results)
     '''
 
+    '''
     distribution_networks = planning_problem.distribution_networks
     candidate_solution = planning_problem.get_initial_candidate_solution()
     for node_id in distribution_networks:
@@ -86,6 +88,7 @@ def shared_resources_planning(working_directory, specification_filename):
         results = distribution_network.optimize(dn_model)
         processed_results = distribution_network.process_results(dn_model, results)
         distribution_network.write_optimization_results_to_excel(processed_results)
+    '''
 
     print('==========================================================================================================')
     print('                                                 END                                                      ')
