@@ -1047,6 +1047,25 @@ def _build_model(network, params):
             obj += PENALTY_ESS_SLACK * (model.shared_es_s_slack_up[e] + model.shared_es_s_slack_down[e])
             obj += PENALTY_ESS_SLACK * (model.shared_es_e_slack_up[e] + model.shared_es_e_slack_down[e])
 
+        if network.is_transmission:
+            for dn in model.active_distribution_networks:
+                for p in model.periods:
+                    obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_p[dn, p]
+                    obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_q[dn, p]
+                    obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_vmag_sqr[dn, p]
+            for e in model.shared_energy_storages:
+                for p in model.periods:
+                    obj += PENALTY_ESS_SLACK * model.penalty_expected_shared_ess_p[e, p]
+                    obj += PENALTY_ESS_SLACK * model.penalty_expected_shared_ess_q[e, p]
+        else:
+            for p in model.periods:
+                obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_p[p]
+                obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_q[p]
+                obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_vmag_sqr[p]
+            for p in model.periods:
+                obj += PENALTY_ESS_SLACK * model.penalty_expected_shared_ess_p[p]
+                obj += PENALTY_ESS_SLACK * model.penalty_expected_shared_ess_q[p]
+
         model.objective = pe.Objective(sense=pe.minimize, expr=obj)
     else:
         print(f'[ERROR] Unrecognized or invalid objective. Objective = {params.obj_type}. Exiting...')
