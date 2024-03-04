@@ -1886,7 +1886,7 @@ def _process_results(network, model, params, results=dict()):
                 if params.ess_relax:
                     for e in model.energy_storages:
                         node_id = network.energy_storages[e].bus
-                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['comp'][node_id] = pe.value(model.penalty_shared_es_soc_day_balance[e, s_m, s_o])
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['comp'][node_id] = []
                         for p in model.periods:
                             slack_comp = pe.value(model.es_penalty[e, s_m, s_o, p])
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['comp'][node_id].append(slack_comp)
