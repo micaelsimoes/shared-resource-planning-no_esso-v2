@@ -16,11 +16,11 @@ class NetworkParameters:
         self.rg_curt = False
         self.l_curt = False
         self.relaxed_model = False
-        self.ess_relax = False
-        self.fl_relax = False
         self.enforce_vg = False
         self.slack_line_limits = False
         self.slack_voltage_limits = False
+        self.ess_relax = False
+        self.fl_relax = False
         self.print_to_screen = False
         self.plot_diagram = False
         self.print_results_to_file = False
@@ -56,6 +56,3 @@ def _read_network_parameters_from_file(parameters, filename):
     parameters.print_to_screen = params_data['print_to_screen']
     parameters.plot_diagram = params_data['plot_diagram']
     parameters.print_results_to_file = params_data['print_results_to_file']
-    if parameters.relaxed_model:
-        parameters.ess_relax = True     # Note: if "relaxed_model" is active, "ess_relax" and "fl_relax" are overridden
-        parameters.fl_relax = True
