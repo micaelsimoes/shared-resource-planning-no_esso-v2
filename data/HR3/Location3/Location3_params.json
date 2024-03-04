@@ -9,6 +9,7 @@
 	"slack_line_limits": true,
 	"slack_voltage_limits": true,
 	"ess_relax": true,
+	"ess_relax_apparent_power": true,
 	"fl_relax": true,
 	"interface_relax": true,
 	"solver": {
