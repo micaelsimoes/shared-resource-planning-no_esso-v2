@@ -563,15 +563,15 @@ def _build_model(network, params):
                         qdch = model.es_qdch[e, s_m, s_o, p]
 
                         # ESS operation
-                        model.energy_storage_operation.add(sch ** 2 - (pch ** 2 + qch ** 2) >= -(1/s_base) * SMALL_TOLERANCE)
-                        model.energy_storage_operation.add(sch ** 2 - (pch ** 2 + qch ** 2) <= (1/s_base) * SMALL_TOLERANCE)
-                        model.energy_storage_operation.add(sdch ** 2 - (pdch ** 2 + qdch ** 2) >= -(1/s_base) * SMALL_TOLERANCE)
-                        model.energy_storage_operation.add(sdch ** 2 - (pdch ** 2 + qdch ** 2) <= (1/s_base) * SMALL_TOLERANCE)
-
                         model.energy_storage_operation.add(qch <= tan(max_phi) * pch)
                         model.energy_storage_operation.add(qch >= tan(min_phi) * pch)
                         model.energy_storage_operation.add(qdch <= tan(max_phi) * pdch)
                         model.energy_storage_operation.add(qdch >= tan(min_phi) * pdch)
+
+                        model.energy_storage_operation.add(sch ** 2 - (pch ** 2 + qch ** 2) >= -(1/s_base) * SMALL_TOLERANCE)
+                        model.energy_storage_operation.add(sch ** 2 - (pch ** 2 + qch ** 2) <= (1/s_base) * SMALL_TOLERANCE)
+                        model.energy_storage_operation.add(sdch ** 2 - (pdch ** 2 + qdch ** 2) >= -(1/s_base) * SMALL_TOLERANCE)
+                        model.energy_storage_operation.add(sdch ** 2 - (pdch ** 2 + qdch ** 2) <= (1/s_base) * SMALL_TOLERANCE)
 
                         # State-of-Charge
                         if p > 0:

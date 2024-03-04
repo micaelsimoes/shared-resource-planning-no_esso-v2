@@ -46,11 +46,11 @@ def _read_network_parameters_from_file(parameters, filename):
     parameters.fl_reg = params_data['fl_reg']
     parameters.rg_curt = params_data['rg_curt']
     parameters.l_curt = params_data['l_curt']
-    parameters.ess_relax = params_data['ess_relax']
-    parameters.fl_relax = params_data['fl_relax']
     parameters.enforce_vg = params_data['enforce_vg']
     parameters.slack_line_limits = params_data['slack_line_limits']
     parameters.slack_voltage_limits = params_data['slack_voltage_limits']
+    parameters.ess_relax = params_data['ess_relax']
+    parameters.fl_relax = params_data['fl_relax']
     parameters.solver_params.read_solver_parameters(params_data['solver'])
     parameters.print_to_screen = params_data['print_to_screen']
     parameters.plot_diagram = params_data['plot_diagram']
