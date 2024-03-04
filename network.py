@@ -1042,6 +1042,15 @@ def _build_model(network, params):
                                 p_down += model.flex_p_down[i, s_m, s_o, p]
                             obj_scenario += PENALTY_FLEX_LOAD_ENERGY_BALANCE_CONS * network.baseMVA * (p_up - p_down)
 
+                # ESS complementarity constraints penalty
+                if params.ess_relax:
+                    for e in model.energy_storages:
+                        for p in model.periods:
+                            obj_scenario += PENALTY_ESS_COMPLEMENTARITY * model.es_penalty[e, s_m, s_o, p]
+                    for e in model.shared_energy_storages:
+                        for p in model.periods:
+                            obj_scenario += PENALTY_ESS_COMPLEMENTARITY * model.shared_es_penalty[e, s_m, s_o, p]
+
                 obj += obj_scenario * omega_market * omega_oper
 
         for e in model.shared_energy_storages:
