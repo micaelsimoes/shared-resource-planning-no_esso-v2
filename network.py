@@ -1640,26 +1640,33 @@ def _process_results(network, model, params, results=dict()):
                 processed_results['scenarios'][s_m][s_o]['energy_storages']['soc'] = dict()
                 processed_results['scenarios'][s_m][s_o]['energy_storages']['soc_percent'] = dict()
 
-            if params.relaxed_model or params.ess_relax or params.fl_relax:
+            if params.slacks_used:
                 processed_results['scenarios'][s_m][s_o]['relaxation_slacks'] = dict()
+                if params.slack_voltage_limits:
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['voltage'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['voltage']['e_up'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['voltage']['e_down'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['voltage']['f_up'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['voltage']['f_down'] = dict()
+                if params.slack_line_limits:
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['current'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['current']['iij_sqr'] = dict()
                 if params.ess_relax:
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages'] = dict()
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['ch'] = dict()
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['dch'] = dict()
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['soc'] = dict()
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['comp'] = dict()
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['day_balance'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['ch'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['dch'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['soc'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['comp'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['day_balance'] = dict()
-                if params.relaxed_model:
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes'] = dict()
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes']['gen_vg'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['ch'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['dch'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['soc'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['comp'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['day_balance'] = dict()
                 if params.fl_relax:
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes']['day_balance'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance'] = dict()
 
             # Voltage
             for i in model.nodes:
@@ -1841,10 +1848,36 @@ def _process_results(network, model, params, results=dict()):
                         processed_results['scenarios'][s_m][s_o]['shared_energy_storages']['soc_percent'][node_id].append('N/A')
 
             # Slack variable penalties
-            if params.relaxed_model or params.ess_relax or params.fl_relax:
+            if params.slacks_used:
+
+                # Voltage slacks
+                if params.slack_voltage_limits:
+                    for i in model.nodes:
+                        node_id = network.nodes[i].bus_i
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['voltage']['e_up'][node_id] = []
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['voltage']['e_down'][node_id] = []
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['voltage']['f_up'][node_id] = []
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['voltage']['f_down'][node_id] = []
+                        for p in model.periods:
+                            slack_e_up = pe.value(model.slack_e_up[i, s_m, s_o, p])
+                            slack_e_down = pe.value(model.slack_e_down[i, s_m, s_o, p])
+                            slack_f_up = pe.value(model.slack_f_up[i, s_m, s_o, p])
+                            slack_f_down = pe.value(model.slack_f_down[i, s_m, s_o, p])
+                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['voltage']['e_up'][node_id].append(slack_e_up)
+                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['voltage']['e_down'][node_id].append(slack_e_down)
+                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['voltage']['f_up'][node_id].append(slack_f_up)
+                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['voltage']['f_down'][node_id].append(slack_f_down)
+
+                # Branch current slacks
+                if params.slack_line_limits:
+                    for b in model.branches:
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['current']['iij_sqr'][b] = []
+                        for p in model.periods:
+                            slack_iij_sqr = pe.value(model.slack_iij_sqr[b, s_m, s_o, p])
+                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['current']['iij_sqr'][b].append(slack_iij_sqr)
 
                 # Shared ESS
-                if params.relaxed_model:
+                if params.ess_relax:
                     for e in model.shared_energy_storages:
                         node_id = network.shared_energy_storages[e].bus
                         processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['ch'][node_id] = []
@@ -1863,7 +1896,7 @@ def _process_results(network, model, params, results=dict()):
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['comp'][node_id].append(slack_comp)
 
                 # ESS
-                if params.es_reg and params.ess_relax:
+                if params.ess_relax:
                     for e in model.energy_storages:
                         node_id = network.energy_storages[e].bus
                         processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['ch'][node_id] = []
@@ -1881,23 +1914,11 @@ def _process_results(network, model, params, results=dict()):
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['soc'][node_id].append(slack_soc)
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['comp'][node_id].append(slack_comp)
 
-                # PV bus voltage set-point
-                if params.relaxed_model:
-                    for i in model.nodes:
-                        node_id = network.nodes[i].bus_i
-                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes']['gen_vg'][node_id] = []
-                        for p in model.periods:
-                            slack_vg = pe.value(model.penalty_gen_vg[i, s_m, s_o, p])
-                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes']['gen_vg'][node_id].append(slack_vg)
-
                 # Flex daily balance
                 if params.fl_reg and params.fl_relax:
                     for i in model.nodes:
                         node_id = network.nodes[i].bus_i
-                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes']['day_balance'][node_id] = pe.value(model.penalty_flex_day_balance[e, s_m, s_o])
-                        for p in model.periods:
-                            slack_vg = pe.value(model.penalty_gen_vg[i, s_m, s_o, p])
-                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['nodes']['gen_vg'][node_id].append(slack_vg)
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance'][node_id] = pe.value(model.penalty_flex_day_balance[e, s_m, s_o])
 
     return processed_results
 

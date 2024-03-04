@@ -18,9 +18,9 @@ class NetworkParameters:
         self.enforce_vg = False
         self.slack_line_limits = False
         self.slack_voltage_limits = False
-        self.relaxed_model = False
         self.ess_relax = False
         self.fl_relax = False
+        self.slacks_used = False
         self.print_to_screen = False
         self.plot_diagram = False
         self.print_results_to_file = False
@@ -46,7 +46,6 @@ def _read_network_parameters_from_file(parameters, filename):
     parameters.fl_reg = params_data['fl_reg']
     parameters.rg_curt = params_data['rg_curt']
     parameters.l_curt = params_data['l_curt']
-    parameters.relaxed_model = params_data['relaxed_model']
     parameters.ess_relax = params_data['ess_relax']
     parameters.fl_relax = params_data['fl_relax']
     parameters.enforce_vg = params_data['enforce_vg']
@@ -56,3 +55,6 @@ def _read_network_parameters_from_file(parameters, filename):
     parameters.print_to_screen = params_data['print_to_screen']
     parameters.plot_diagram = params_data['plot_diagram']
     parameters.print_results_to_file = params_data['print_results_to_file']
+
+    if parameters.slack_voltage_limits or parameters.slack_line_limits or parameters.ess_relax or parameters.ess_relax:
+        parameters.slacks_used = True
