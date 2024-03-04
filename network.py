@@ -299,9 +299,9 @@ def _build_model(network, params):
                                 if gen.status[p] == 1:
                                     init_pg = max(gen.pg[s_o][p], 0.0)
                                 model.pg_curt[g, s_m, s_o, p].setub(init_pg)
-                else:
-                    # - Generator is not curtaillable (conventional RES, ref gen, etc.)
-                    model.pg_curt[g, s_m, s_o, p].fix(0.0)
+                            else:
+                                # - Generator is not curtaillable (conventional RES, ref gen, etc.)
+                                model.pg_curt[g, s_m, s_o, p].fix(0.0)
 
     # - Branch current (squared)
     model.iij_sqr = pe.Var(model.branches, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
