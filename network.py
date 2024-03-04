@@ -329,6 +329,8 @@ def _build_model(network, params):
     if params.fl_reg:
         model.flex_p_up = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.flex_p_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
+        if params.fl_relax:
+            model.flex_penalty = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, domain=pe.NonNegativeReals, initialize=0.0)
         for i in model.nodes:
             node = network.nodes[i]
             for s_m in model.scenarios_market:
@@ -516,18 +518,20 @@ def _build_model(network, params):
 
     # - Flexible Loads -- Daily energy balance
     if params.fl_reg:
-        if not params.fl_relax:
-            # - FL energy balance added as a strict constraint
-            model.fl_p_balance = pe.ConstraintList()
-            for i in model.nodes:
-                for s_m in model.scenarios_market:
-                    for s_o in model.scenarios_operation:
-                        p_up, p_down = 0.0, 0.0
-                        for p in model.periods:
-                            p_up += model.flex_p_up[i, s_m, s_o, p]
-                            p_down += model.flex_p_down[i, s_m, s_o, p]
+        model.fl_p_balance = pe.ConstraintList()
+        for i in model.nodes:
+            for s_m in model.scenarios_market:
+                for s_o in model.scenarios_operation:
+                    p_up, p_down = 0.0, 0.0
+                    for p in model.periods:
+                        p_up += model.flex_p_up[i, s_m, s_o, p]
+                        p_down += model.flex_p_down[i, s_m, s_o, p]
+                    if not params.fl_relax:
+                        # - FL energy balance added as a strict constraint
                         model.fl_p_balance.add(p_up - p_down >= -SMALL_TOLERANCE)   # Note: helps with convergence (numerical issues)
                         model.fl_p_balance.add(p_up - p_down <= SMALL_TOLERANCE)
+                    else:
+                        model.fl_p_balance.add(p_up - p_down <= model.flex_penalty[i, s_m, s_o])   # Note: helps with convergence (numerical issues)
 
     # - Energy Storage constraints
     if params.es_reg:
@@ -941,16 +945,6 @@ def _build_model(network, params):
                             slack_iij_sqr = model.slack_iij_sqr[b, s_m, s_o, p]
                             obj_scenario += COST_SLACK_BRANCH_FLOW * network.baseMVA * slack_iij_sqr
 
-                # Flexible loads energy balance constraint
-                if params.fl_reg:
-                    if params.fl_relax:
-                        for i in model.nodes:
-                            p_up, p_down = 0.0, 0.0
-                            for p in model.periods:
-                                p_up += model.flex_p_up[i, s_m, s_o, p]
-                                p_down += model.flex_p_down[i, s_m, s_o, p]
-                            obj_scenario += COST_FLEX_LOAD_ENERGY_BALANCE_CONS * network.baseMVA * (p_up - p_down)
-
                 # ESS complementarity constraints penalty
                 if params.ess_relax:
                     for e in model.energy_storages:
@@ -961,6 +955,12 @@ def _build_model(network, params):
                             obj_scenario += PENALTY_ESS_COMPLEMENTARITY * model.shared_es_penalty[e, s_m, s_o, p]
 
                 obj += obj_scenario * omega_market * omega_oper
+
+        if params.fl_reg and params.fl_relax:
+            for i in model.nodes:
+                for s_m in model.scenarios_market:
+                    for s_o in model.scenarios_operation:
+                        obj += PENALTY_FLEX * (model.flex_penalty[i, s_m, s_o])
 
         for e in model.shared_energy_storages:
             obj += PENALTY_ESS_SLACK * (model.shared_es_s_slack_up[e] + model.shared_es_s_slack_down[e])
@@ -1032,16 +1032,6 @@ def _build_model(network, params):
                             obj_scenario += PENALTY_LOAD_CURTAILMENT * pc_curt
                             obj_scenario += PENALTY_LOAD_CURTAILMENT * qc_curt
 
-                # Flexible loads energy balance constraint
-                if params.fl_reg:
-                    if params.fl_relax:
-                        for i in model.nodes:
-                            p_up, p_down = 0.0, 0.0
-                            for p in model.periods:
-                                p_up += model.flex_p_up[i, s_m, s_o, p]
-                                p_down += model.flex_p_down[i, s_m, s_o, p]
-                            obj_scenario += PENALTY_FLEX_LOAD_ENERGY_BALANCE_CONS * network.baseMVA * (p_up - p_down)
-
                 # ESS complementarity constraints penalty
                 if params.ess_relax:
                     for e in model.energy_storages:
@@ -1052,6 +1042,12 @@ def _build_model(network, params):
                             obj_scenario += PENALTY_ESS_COMPLEMENTARITY * model.shared_es_penalty[e, s_m, s_o, p]
 
                 obj += obj_scenario * omega_market * omega_oper
+
+        if params.fl_reg and params.fl_relax:
+            for i in model.nodes:
+                for s_m in model.scenarios_market:
+                    for s_o in model.scenarios_operation:
+                        obj += PENALTY_FLEX * (model.flex_penalty[i, s_m, s_o])
 
         for e in model.shared_energy_storages:
             obj += PENALTY_ESS_SLACK * (model.shared_es_s_slack_up[e] + model.shared_es_s_slack_down[e])
@@ -1899,7 +1895,7 @@ def _process_results(network, model, params, results=dict()):
                 if params.fl_reg and params.fl_relax:
                     for i in model.nodes:
                         node_id = network.nodes[i].bus_i
-                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance'][node_id] = pe.value(model.penalty_flex_day_balance[e, s_m, s_o])
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance'][node_id] = pe.value(model.flex_penalty[e, s_m, s_o])
 
     return processed_results
 

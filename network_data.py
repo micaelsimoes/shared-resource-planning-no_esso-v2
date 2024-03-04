@@ -2028,6 +2028,28 @@ def _write_relaxation_slacks_results_to_excel(network_planning, workbook, result
                                 sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
                             row_idx = row_idx + 1
 
+    if params.fl_relax:
+        for year in results:
+            for day in results[year]:
+                for s_m in results[year][day]['scenarios']:
+                    for s_o in results[year][day]['scenarios'][s_m]:
+                        for node_id in results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance']:
+
+                            sheet.cell(row=row_idx, column=1).value = node_id
+                            sheet.cell(row=row_idx, column=2).value = int(year)
+                            sheet.cell(row=row_idx, column=3).value = day
+                            sheet.cell(row=row_idx, column=4).value = 'Flexibility, balance'
+                            sheet.cell(row=row_idx, column=5).value = s_m
+                            sheet.cell(row=row_idx, column=6).value = s_o
+                            for p in range(network_planning.num_instants):
+                                if p == network_planning.num_instants - 1:
+                                    flex_balance = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance'][node_id]
+                                else:
+                                    flex_balance = 0.00
+                                sheet.cell(row=row_idx, column=p + 7).value = flex_balance
+                                sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
+                            row_idx = row_idx + 1
+
 
 # ======================================================================================================================
 #  OTHER (auxiliary) functions
