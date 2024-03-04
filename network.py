@@ -437,8 +437,8 @@ def _build_model(network, params):
         model.expected_interface_vmag_sqr = pe.Var(model.active_distribution_networks, model.periods, domain=pe.NonNegativeReals, initialize=1.0)
         model.expected_interface_pf_p = pe.Var(model.active_distribution_networks, model.periods, domain=pe.Reals, initialize=0.0)
         model.expected_interface_pf_q = pe.Var(model.active_distribution_networks, model.periods, domain=pe.Reals, initialize=0.0)
-        '''
         model.penalty_expected_interface_vmag_sqr = pe.Var(model.active_distribution_networks, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
+        '''
         model.penalty_expected_interface_pf_p = pe.Var(model.active_distribution_networks, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.penalty_expected_interface_pf_q = pe.Var(model.active_distribution_networks, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         '''
@@ -446,8 +446,8 @@ def _build_model(network, params):
         model.expected_interface_vmag_sqr = pe.Var(model.periods, domain=pe.NonNegativeReals, initialize=1.0)
         model.expected_interface_pf_p = pe.Var(model.periods, domain=pe.Reals, initialize=0.0)
         model.expected_interface_pf_q = pe.Var(model.periods, domain=pe.Reals, initialize=0.0)
-        '''
         model.penalty_expected_interface_vmag_sqr = pe.Var(model.periods, domain=pe.NonNegativeReals, initialize=0.0)
+        '''
         model.penalty_expected_interface_pf_p = pe.Var(model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.penalty_expected_interface_pf_q = pe.Var(model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         '''
@@ -503,8 +503,8 @@ def _build_model(network, params):
                             # - Voltage at the bus is not controlled
                             e = model.e_actual[i, s_m, s_o, p]
                             f = model.f_actual[i, s_m, s_o, p]
-                            model.voltage_cons.add(e ** 2 + f ** 2 >= node.v_min**2)
-                            model.voltage_cons.add(e ** 2 + f ** 2 <= node.v_max**2)
+                            model.voltage_cons.add(e ** 2 + f ** 2 >= (node.v_min - SMALL_TOLERANCE)**2)
+                            model.voltage_cons.add(e ** 2 + f ** 2 <= (node.v_max + SMALL_TOLERANCE)**2)
                     elif node.type == BUS_PQ:
                         e = model.e_actual[i, s_m, s_o, p]
                         f = model.f_actual[i, s_m, s_o, p]
@@ -513,8 +513,8 @@ def _build_model(network, params):
                         if params.slack_voltage_limits:
                             slack_v_up_sqr += model.slack_e_up[i, s_m, s_o, p] ** 2 + model.slack_f_up[i, s_m, s_o, p] ** 2
                             slack_v_down_sqr += model.slack_e_down[i, s_m, s_o, p] ** 2 + model.slack_f_down[i, s_m, s_o, p] ** 2
-                        model.voltage_cons.add(e ** 2 + f ** 2 + slack_v_down_sqr >= node.v_min ** 2)
-                        model.voltage_cons.add(e ** 2 + f ** 2 - slack_v_up_sqr <= node.v_max ** 2)
+                        model.voltage_cons.add(e ** 2 + f ** 2 + slack_v_down_sqr >= (node.v_min - SMALL_TOLERANCE) ** 2)
+                        model.voltage_cons.add(e ** 2 + f ** 2 - slack_v_up_sqr <= (node.v_max + SMALL_TOLERANCE) ** 2)
 
     # - Flexible Loads -- Daily energy balance
     if params.fl_reg:
@@ -798,8 +798,12 @@ def _build_model(network, params):
                 model.expected_interface_pf.add(model.expected_interface_pf_p[dn, p] - expected_pf_p <= SMALL_TOLERANCE)
                 model.expected_interface_pf.add(model.expected_interface_pf_q[dn, p] - expected_pf_q >= -SMALL_TOLERANCE)
                 model.expected_interface_pf.add(model.expected_interface_pf_q[dn, p] - expected_pf_q <= SMALL_TOLERANCE)
-                model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[dn, p] - expected_vmag_sqr >= -SMALL_TOLERANCE)
-                model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[dn, p] - expected_vmag_sqr <= SMALL_TOLERANCE)
+
+                if not params.interface_relax:
+                    model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[dn, p] - expected_vmag_sqr >= -SMALL_TOLERANCE)
+                    model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[dn, p] - expected_vmag_sqr <= SMALL_TOLERANCE)
+                else:
+                    model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[dn, p] - expected_vmag_sqr <= model.penalty_expected_interface_vmag_sqr[dn, p])
                 '''
                 model.expected_interface_pf.add(model.expected_interface_pf_p[dn, p] - expected_pf_p <= model.penalty_expected_interface_pf_p[dn, p])
                 model.expected_interface_pf.add(model.expected_interface_pf_q[dn, p] - expected_pf_q <= model.penalty_expected_interface_pf_q[dn, p])
@@ -824,8 +828,13 @@ def _build_model(network, params):
             model.expected_interface_pf.add(model.expected_interface_pf_p[p] - expected_pf_p <= SMALL_TOLERANCE)
             model.expected_interface_pf.add(model.expected_interface_pf_q[p] - expected_pf_q >= -SMALL_TOLERANCE)
             model.expected_interface_pf.add(model.expected_interface_pf_q[p] - expected_pf_q <= SMALL_TOLERANCE)
-            model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[p] - expected_vmag_sqr >= -SMALL_TOLERANCE)
-            model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[p] - expected_vmag_sqr <= SMALL_TOLERANCE)
+
+            if not params.interface_relax:
+                model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[p] - expected_vmag_sqr >= -SMALL_TOLERANCE)
+                model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[p] - expected_vmag_sqr <= SMALL_TOLERANCE)
+            else:
+                model.expected_interface_voltage.add(model.expected_interface_vmag_sqr[p] - expected_vmag_sqr <= model.penalty_expected_interface_vmag_sqr[p])
+
             '''
             model.expected_interface_pf.add(model.expected_interface_pf_p[p] - expected_pf_p <= model.penalty_expected_interface_pf_p[p])
             model.expected_interface_pf.add(model.expected_interface_pf_q[p] - expected_pf_q <= model.penalty_expected_interface_pf_q[p])
@@ -962,30 +971,18 @@ def _build_model(network, params):
                     for s_o in model.scenarios_operation:
                         obj += PENALTY_FLEX * (model.flex_penalty[i, s_m, s_o])
 
+        if params.interface_relax:
+            if network.is_transmission:
+                for dn in model.active_distribution_networks:
+                    for p in model.periods:
+                        obj += PENALTY_INTERFACE * (model.penalty_expected_interface_vmag_sqr[dn, p])
+            else:
+                for p in model.periods:
+                    obj += PENALTY_INTERFACE * (model.penalty_expected_interface_vmag_sqr[p])
+
         for e in model.shared_energy_storages:
             obj += PENALTY_ESS_SLACK * (model.shared_es_s_slack_up[e] + model.shared_es_s_slack_down[e])
             obj += PENALTY_ESS_SLACK * (model.shared_es_e_slack_up[e] + model.shared_es_e_slack_down[e])
-
-        '''
-        if network.is_transmission:
-            for dn in model.active_distribution_networks:
-                for p in model.periods:
-                    obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_p[dn, p]
-                    obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_q[dn, p]
-                    obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_vmag_sqr[dn, p]
-            for e in model.shared_energy_storages:
-                for p in model.periods:
-                    obj += PENALTY_ESS_SLACK * model.penalty_expected_shared_ess_p[e, p]
-                    obj += PENALTY_ESS_SLACK * model.penalty_expected_shared_ess_q[e, p]
-        else:
-            for p in model.periods:
-                obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_p[p]
-                obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_q[p]
-                obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_vmag_sqr[p]
-            for p in model.periods:
-                obj += PENALTY_ESS_SLACK * model.penalty_expected_shared_ess_p[p]
-                obj += PENALTY_ESS_SLACK * model.penalty_expected_shared_ess_q[p]
-        '''
 
         model.objective = pe.Objective(sense=pe.minimize, expr=obj)
 
@@ -1053,26 +1050,14 @@ def _build_model(network, params):
             obj += PENALTY_ESS_SLACK * (model.shared_es_s_slack_up[e] + model.shared_es_s_slack_down[e])
             obj += PENALTY_ESS_SLACK * (model.shared_es_e_slack_up[e] + model.shared_es_e_slack_down[e])
 
-        '''
-        if network.is_transmission:
-            for dn in model.active_distribution_networks:
+        if params.interface_relax:
+            if network.is_transmission:
+                for dn in model.active_distribution_networks:
+                    for p in model.periods:
+                        obj += PENALTY_INTERFACE * (model.penalty_expected_interface_vmag_sqr[dn, p])
+            else:
                 for p in model.periods:
-                    obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_p[dn, p]
-                    obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_q[dn, p]
-                    obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_vmag_sqr[dn, p]
-            for e in model.shared_energy_storages:
-                for p in model.periods:
-                    obj += PENALTY_ESS_SLACK * model.penalty_expected_shared_ess_p[e, p]
-                    obj += PENALTY_ESS_SLACK * model.penalty_expected_shared_ess_q[e, p]
-        else:
-            for p in model.periods:
-                obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_p[p]
-                obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_pf_q[p]
-                obj += PENALTY_ESS_SLACK * model.penalty_expected_interface_vmag_sqr[p]
-            for p in model.periods:
-                obj += PENALTY_ESS_SLACK * model.penalty_expected_shared_ess_p[p]
-                obj += PENALTY_ESS_SLACK * model.penalty_expected_shared_ess_q[p]
-        '''
+                    obj += PENALTY_INTERFACE * (model.penalty_expected_interface_vmag_sqr[p])
 
         model.objective = pe.Objective(sense=pe.minimize, expr=obj)
     else:
@@ -1664,6 +1649,9 @@ def _process_results(network, model, params, results=dict()):
                 if params.fl_relax:
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance'] = dict()
+                if params.interface_relax:
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['vmag_sqr'] = dict()
 
             # Voltage
             for i in model.nodes:
@@ -1896,6 +1884,22 @@ def _process_results(network, model, params, results=dict()):
                     for i in model.nodes:
                         node_id = network.nodes[i].bus_i
                         processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance'][node_id] = pe.value(model.flex_penalty[e, s_m, s_o])
+
+                # Interface
+                if params.interface_relax:
+                    if network.is_transmission:
+                        for dn in model.active_distribution_networks:
+                            node_id = network.active_distribution_network_nodes[dn]
+                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['vmag_sqr'][node_id] = []
+                            for p in model.periods:
+                                slack_vmag = pe.value(model.penalty_expected_interface_vmag_sqr[dn, p])
+                                processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['vmag_sqr'][node_id].append(slack_vmag)
+                    else:
+                        node_id = network.get_reference_node_id()
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['vmag_sqr'][node_id] = []
+                        for p in model.periods:
+                            slack_vmag = pe.value(model.penalty_expected_interface_vmag_sqr[p])
+                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['vmag_sqr'][node_id].append(slack_vmag)
 
     return processed_results
 

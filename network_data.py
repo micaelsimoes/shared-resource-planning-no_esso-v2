@@ -2050,6 +2050,22 @@ def _write_relaxation_slacks_results_to_excel(network_planning, workbook, result
                                 sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
                             row_idx = row_idx + 1
 
+    if params.interface_relax:
+        for year in results:
+            for day in results[year]:
+                for node_id in results[year][day]['scenarios'][0][0]['relaxation_slacks']['interface']['vmag_sqr']:
+                    sheet.cell(row=row_idx, column=1).value = node_id
+                    sheet.cell(row=row_idx, column=2).value = int(year)
+                    sheet.cell(row=row_idx, column=3).value = day
+                    sheet.cell(row=row_idx, column=4).value = 'Interface, vmag'
+                    sheet.cell(row=row_idx, column=5).value = s_m
+                    sheet.cell(row=row_idx, column=6).value = s_o
+                    for p in range(network_planning.num_instants):
+                        vmag_sqr = results[year][day]['scenarios'][0][0]['relaxation_slacks']['interface']['vmag_sqr'][node_id][p]
+                        sheet.cell(row=row_idx, column=p + 7).value = vmag_sqr
+                        sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
+                    row_idx = row_idx + 1
+
 
 # ======================================================================================================================
 #  OTHER (auxiliary) functions

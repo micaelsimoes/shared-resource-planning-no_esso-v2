@@ -10,6 +10,7 @@
 	"slack_voltage_limits": true,
 	"ess_relax": true,
 	"fl_relax": true,
+	"interface_relax": true,
 	"solver": {
 		"name": "ipopt",
 		"linear_solver": "ma57",
