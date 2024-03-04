@@ -355,21 +355,18 @@ def _build_model(network, params):
     model.r = pe.Var(model.branches, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=1.0)
     for i in model.branches:
         branch = network.branches[i]
-        if branch.is_transformer:
-            # - Transformer
-            for s_m in model.scenarios_market:
-                for s_o in model.scenarios_operation:
-                    for p in model.periods:
+        for s_m in model.scenarios_market:
+            for s_o in model.scenarios_operation:
+                for p in model.periods:
+                    if branch.is_transformer:
+                        # - Transformer
                         if params.transf_reg and branch.vmag_reg:
                             model.r[i, s_m, s_o, p].setub(TRANSFORMER_MAXIMUM_RATIO)
                             model.r[i, s_m, s_o, p].setlb(TRANSFORMER_MINIMUM_RATIO)
                         else:
                             model.r[i, s_m, s_o, p].fix(branch.ratio)
-        else:
-            # - Line, or FACTS
-            for s_m in model.scenarios_market:
-                for s_o in model.scenarios_operation:
-                    for p in model.periods:
+                    else:
+                        # - Line, or FACTS
                         if branch.ratio != 0.0:
                             model.r[i, s_m, s_o, p].fix(branch.ratio)            # Voltage regulation device, use given ratio
                         else:
@@ -403,7 +400,7 @@ def _build_model(network, params):
                         model.es_qdch[e, s_m, s_o, p].setub(energy_storage.s)
                         model.es_qdch[e, s_m, s_o, p].setlb(-energy_storage.s)
                         if params.ess_relax:
-                            model.es_penalty[e, s_m, s_o, p] = energy_storage.s
+                            model.es_penalty[e, s_m, s_o, p] = 0.00
 
     # - Shared Energy Storage devices
     model.shared_es_s_rated = pe.Var(model.shared_energy_storages, domain=pe.NonNegativeReals)
