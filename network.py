@@ -1662,17 +1662,9 @@ def _process_results(network, model, params, results=dict()):
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['current']['iij_sqr'] = dict()
                 if params.ess_relax:
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages'] = dict()
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['ch'] = dict()
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['dch'] = dict()
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['soc'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['comp'] = dict()
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['day_balance'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages'] = dict()
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['ch'] = dict()
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['dch'] = dict()
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['soc'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['comp'] = dict()
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['day_balance'] = dict()
                 if params.fl_relax:
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance'] = dict()
@@ -1889,38 +1881,18 @@ def _process_results(network, model, params, results=dict()):
                 if params.ess_relax:
                     for e in model.shared_energy_storages:
                         node_id = network.shared_energy_storages[e].bus
-                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['ch'][node_id] = []
-                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['dch'][node_id] = []
-                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['soc'][node_id] = []
                         processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['comp'][node_id] = []
-                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['day_balance'][node_id] = pe.value(model.penalty_shared_es_soc_day_balance[e, s_m, s_o])
                         for p in model.periods:
-                            slack_ch = pe.value(model.penalty_shared_es_ch[e, s_m, s_o, p])
-                            slack_dch = pe.value(model.penalty_shared_es_ch[e, s_m, s_o, p])
-                            slack_soc = pe.value(model.penalty_shared_es_soc[e, s_m, s_o, p])
-                            slack_comp = pe.value(model.penalty_shared_es_comp[e, s_m, s_o, p])
-                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['ch'][node_id].append(slack_ch)
-                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['dch'][node_id].append(slack_dch)
-                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['soc'][node_id].append(slack_soc)
+                            slack_comp = pe.value(model.shared_es_penalty[e, s_m, s_o, p])
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['comp'][node_id].append(slack_comp)
 
                 # ESS
                 if params.ess_relax:
                     for e in model.energy_storages:
                         node_id = network.energy_storages[e].bus
-                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['ch'][node_id] = []
-                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['dch'][node_id] = []
-                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['soc'][node_id] = []
-                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['comp'][node_id] = []
-                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['day_balance'][node_id] = pe.value(model.penalty_shared_es_soc_day_balance[e, s_m, s_o])
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['comp'][node_id] = pe.value(model.penalty_shared_es_soc_day_balance[e, s_m, s_o])
                         for p in model.periods:
-                            slack_ch = pe.value(model.penalty_es_ch[e, s_m, s_o, p])
-                            slack_dch = pe.value(model.penalty_es_ch[e, s_m, s_o, p])
-                            slack_soc = pe.value(model.penalty_es_soc[e, s_m, s_o, p])
-                            slack_comp = pe.value(model.penalty_es_comp[e, s_m, s_o, p])
-                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['ch'][node_id].append(slack_ch)
-                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['dch'][node_id].append(slack_dch)
-                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['soc'][node_id].append(slack_soc)
+                            slack_comp = pe.value(model.es_penalty[e, s_m, s_o, p])
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['comp'][node_id].append(slack_comp)
 
                 # Flex daily balance
