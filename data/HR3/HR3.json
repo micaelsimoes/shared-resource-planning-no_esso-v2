@@ -7,7 +7,7 @@
 	},
 	"Days": {
 		"Winter": 183,
-		"Summer": 182,
+		"Summer": 182
 	},
 	"NumInstants": 24,
 	"DiscountFactor": 0.02,
