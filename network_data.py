@@ -231,7 +231,8 @@ def _write_optimization_results_to_excel(network_planning, data_dir, processed_r
     _write_network_branch_power_flow_results_to_excel(network_planning, wb, processed_results['results'])
     if network_planning.params.es_reg:
         _write_network_energy_storage_results_to_excel(network_planning, wb, processed_results['results'])
-    _write_relaxation_slacks_results_to_excel(network_planning, wb, processed_results['results'])
+    if network_planning.params.slacks_used:
+        _write_relaxation_slacks_results_to_excel(network_planning, wb, processed_results['results'])
 
     results_filename = os.path.join(data_dir, f'{network_planning.name}_results.xlsx')
     try:
@@ -2286,7 +2287,7 @@ def _write_relaxation_slacks_results_to_excel(network_planning, workbook, result
                                 sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
                             row_idx = row_idx + 1
 
-    if params.interface_relax:
+    if params.interface_pf_relax:
         for year in results:
             for day in results[year]:
                 for node_id in results[year][day]['scenarios'][0][0]['relaxation_slacks']['interface']['vmag_sqr_up']:
@@ -2366,6 +2367,63 @@ def _write_relaxation_slacks_results_to_excel(network_planning, workbook, result
                     for p in range(network_planning.num_instants):
                         pf_q_down = results[year][day]['scenarios'][0][0]['relaxation_slacks']['interface']['pf_q_down'][node_id][p]
                         sheet.cell(row=row_idx, column=p + 7).value = pf_q_down
+                        sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
+                    row_idx = row_idx + 1
+
+    if params.interface_ess_relax:
+        for year in results:
+            for day in results[year]:
+                for node_id in results[year][day]['scenarios'][0][0]['relaxation_slacks']['interface']['ess_p_up']:
+
+                    # ess_p, up
+                    sheet.cell(row=row_idx, column=1).value = node_id
+                    sheet.cell(row=row_idx, column=2).value = int(year)
+                    sheet.cell(row=row_idx, column=3).value = day
+                    sheet.cell(row=row_idx, column=4).value = 'Interface, ess_p up'
+                    sheet.cell(row=row_idx, column=5).value = 'N/A'
+                    sheet.cell(row=row_idx, column=6).value = 'N/A'
+                    for p in range(network_planning.num_instants):
+                        ess_p_up = results[year][day]['scenarios'][0][0]['relaxation_slacks']['interface']['ess_p_up'][node_id][p]
+                        sheet.cell(row=row_idx, column=p + 7).value = ess_p_up
+                        sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
+                    row_idx = row_idx + 1
+
+                    # ess_p, down
+                    sheet.cell(row=row_idx, column=1).value = node_id
+                    sheet.cell(row=row_idx, column=2).value = int(year)
+                    sheet.cell(row=row_idx, column=3).value = day
+                    sheet.cell(row=row_idx, column=4).value = 'Interface, ess_p down'
+                    sheet.cell(row=row_idx, column=5).value = 'N/A'
+                    sheet.cell(row=row_idx, column=6).value = 'N/A'
+                    for p in range(network_planning.num_instants):
+                        ess_p_down = results[year][day]['scenarios'][0][0]['relaxation_slacks']['interface']['ess_p_down'][node_id][p]
+                        sheet.cell(row=row_idx, column=p + 7).value = ess_p_down
+                        sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
+                    row_idx = row_idx + 1
+
+                    # ess_q, up
+                    sheet.cell(row=row_idx, column=1).value = node_id
+                    sheet.cell(row=row_idx, column=2).value = int(year)
+                    sheet.cell(row=row_idx, column=3).value = day
+                    sheet.cell(row=row_idx, column=4).value = 'Interface, ess_q up'
+                    sheet.cell(row=row_idx, column=5).value = 'N/A'
+                    sheet.cell(row=row_idx, column=6).value = 'N/A'
+                    for p in range(network_planning.num_instants):
+                        ess_q_up = results[year][day]['scenarios'][0][0]['relaxation_slacks']['interface']['ess_q_up'][node_id][p]
+                        sheet.cell(row=row_idx, column=p + 7).value = ess_q_up
+                        sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
+                    row_idx = row_idx + 1
+
+                    # ess_q, down
+                    sheet.cell(row=row_idx, column=1).value = node_id
+                    sheet.cell(row=row_idx, column=2).value = int(year)
+                    sheet.cell(row=row_idx, column=3).value = day
+                    sheet.cell(row=row_idx, column=4).value = 'Interface, ess_q down'
+                    sheet.cell(row=row_idx, column=5).value = 'N/A'
+                    sheet.cell(row=row_idx, column=6).value = 'N/A'
+                    for p in range(network_planning.num_instants):
+                        ess_q_down = results[year][day]['scenarios'][0][0]['relaxation_slacks']['interface']['ess_q_down'][node_id][p]
+                        sheet.cell(row=row_idx, column=p + 7).value = ess_q_down
                         sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
                     row_idx = row_idx + 1
 

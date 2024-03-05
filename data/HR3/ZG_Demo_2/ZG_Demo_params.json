@@ -13,7 +13,8 @@
 	"ess_relax_soc": true,
 	"ess_relax_day_balance": true,
 	"fl_relax": true,
-	"interface_relax": true,
+	"interface_pf_relax": true,
+	"interface_ess_relax": true,
 	"solver": {
 		"name": "ipopt",
 		"linear_solver": "ma57",
