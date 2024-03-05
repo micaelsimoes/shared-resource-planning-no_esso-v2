@@ -1,9 +1,13 @@
 {
 	"Years": {
-		"2020": 10
+		"2020": 10,
+		"2030": 10,
+		"2040": 10,
+		"2050": 10
 	},
 	"Days": {
-		"Winter": 365
+		"Winter": 183,
+		"Summer": 182,
 	},
 	"NumInstants": 24,
 	"DiscountFactor": 0.02,
