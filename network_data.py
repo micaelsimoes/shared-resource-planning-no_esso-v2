@@ -2088,6 +2088,38 @@ def _write_relaxation_slacks_results_to_excel(network_planning, workbook, result
                                 sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
                             row_idx = row_idx + 1
 
+                            # - Day balance, up
+                            sheet.cell(row=row_idx, column=1).value = node_id
+                            sheet.cell(row=row_idx, column=2).value = int(year)
+                            sheet.cell(row=row_idx, column=3).value = day
+                            sheet.cell(row=row_idx, column=4).value = 'ESS, day_balance_up'
+                            sheet.cell(row=row_idx, column=5).value = s_m
+                            sheet.cell(row=row_idx, column=6).value = s_o
+                            for p in range(network_planning.num_instants):
+                                if p == network_planning.num_instants - 1:
+                                    balance_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['day_balance_up'][node_id]
+                                else:
+                                    balance_up = 0.00
+                                sheet.cell(row=row_idx, column=p + 7).value = balance_up
+                                sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
+                            row_idx = row_idx + 1
+
+                            # - Day balance, down
+                            sheet.cell(row=row_idx, column=1).value = node_id
+                            sheet.cell(row=row_idx, column=2).value = int(year)
+                            sheet.cell(row=row_idx, column=3).value = day
+                            sheet.cell(row=row_idx, column=4).value = 'ESS, day_balance_down'
+                            sheet.cell(row=row_idx, column=5).value = s_m
+                            sheet.cell(row=row_idx, column=6).value = s_o
+                            for p in range(network_planning.num_instants):
+                                if p == network_planning.num_instants - 1:
+                                    balance_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['day_balance_down'][node_id]
+                                else:
+                                    balance_down = 0.00
+                                sheet.cell(row=row_idx, column=p + 7).value = balance_down
+                                sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
+                            row_idx = row_idx + 1
+
         # Shared ESS
         for year in results:
             for day in results[year]:
@@ -2183,6 +2215,38 @@ def _write_relaxation_slacks_results_to_excel(network_planning, workbook, result
                             for p in range(network_planning.num_instants):
                                 soc_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['soc_down'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 7).value = soc_down
+                                sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
+                            row_idx = row_idx + 1
+
+                            # - Day balance, up
+                            sheet.cell(row=row_idx, column=1).value = node_id
+                            sheet.cell(row=row_idx, column=2).value = int(year)
+                            sheet.cell(row=row_idx, column=3).value = day
+                            sheet.cell(row=row_idx, column=4).value = 'ESS, day_balance_up'
+                            sheet.cell(row=row_idx, column=5).value = s_m
+                            sheet.cell(row=row_idx, column=6).value = s_o
+                            for p in range(network_planning.num_instants):
+                                if p == network_planning.num_instants - 1:
+                                    balance_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['day_balance_up'][node_id]
+                                else:
+                                    balance_up = 0.00
+                                sheet.cell(row=row_idx, column=p + 7).value = balance_up
+                                sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
+                            row_idx = row_idx + 1
+
+                            # - Day balance, down
+                            sheet.cell(row=row_idx, column=1).value = node_id
+                            sheet.cell(row=row_idx, column=2).value = int(year)
+                            sheet.cell(row=row_idx, column=3).value = day
+                            sheet.cell(row=row_idx, column=4).value = 'ESS, day_balance_down'
+                            sheet.cell(row=row_idx, column=5).value = s_m
+                            sheet.cell(row=row_idx, column=6).value = s_o
+                            for p in range(network_planning.num_instants):
+                                if p == network_planning.num_instants - 1:
+                                    balance_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['day_balance_down'][node_id]
+                                else:
+                                    balance_down = 0.00
+                                sheet.cell(row=row_idx, column=p + 7).value = balance_down
                                 sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
                             row_idx = row_idx + 1
 

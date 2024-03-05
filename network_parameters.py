@@ -21,6 +21,7 @@ class NetworkParameters:
         self.ess_relax = False
         self.ess_relax_apparent_power = False
         self.ess_relax_soc = False
+        self.ess_relax_day_balance = False
         self.fl_relax = False
         self.interface_relax = False
         self.slacks_used = False
@@ -55,6 +56,7 @@ def _read_network_parameters_from_file(parameters, filename):
     parameters.ess_relax = params_data['ess_relax']
     parameters.ess_relax_apparent_power = params_data['ess_relax_apparent_power']
     parameters.ess_relax_soc = params_data['ess_relax_soc']
+    parameters.ess_relax_day_balance = params_data['ess_relax_day_balance']
     parameters.fl_relax = params_data['fl_relax']
     parameters.interface_relax = params_data['interface_relax']
     parameters.solver_params.read_solver_parameters(params_data['solver'])
