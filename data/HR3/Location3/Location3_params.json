@@ -10,9 +10,9 @@
 	"slack_voltage_limits": true,
 	"ess_relax": true,
 	"ess_relax_apparent_power": true,
-	"ess_relax_soc": false,
-	"ess_relax_day_balance": false,
-	"fl_relax": false,
+	"ess_relax_soc": true,
+	"ess_relax_day_balance": true,
+	"fl_relax": true,
 	"interface_pf_relax": true,
 	"interface_ess_relax": true,
 	"solver": {
