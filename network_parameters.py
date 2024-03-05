@@ -18,7 +18,7 @@ class NetworkParameters:
         self.enforce_vg = False
         self.slack_line_limits = False
         self.slack_voltage_limits = False
-        self.ess_relax = False
+        self.ess_relax_comp = False
         self.ess_relax_apparent_power = False
         self.ess_relax_soc = False
         self.ess_relax_day_balance = False
@@ -54,7 +54,7 @@ def _read_network_parameters_from_file(parameters, filename):
     parameters.enforce_vg = params_data['enforce_vg']
     parameters.slack_line_limits = params_data['slack_line_limits']
     parameters.slack_voltage_limits = params_data['slack_voltage_limits']
-    parameters.ess_relax = params_data['ess_relax']
+    parameters.ess_relax_comp = params_data['ess_relax_comp']
     parameters.ess_relax_apparent_power = params_data['ess_relax_apparent_power']
     parameters.ess_relax_soc = params_data['ess_relax_soc']
     parameters.ess_relax_day_balance = params_data['ess_relax_day_balance']
@@ -67,7 +67,7 @@ def _read_network_parameters_from_file(parameters, filename):
     parameters.print_results_to_file = params_data['print_results_to_file']
 
     if parameters.slack_voltage_limits or parameters.slack_line_limits or \
-            parameters.ess_relax or parameters.ess_relax_apparent_power or parameters.ess_relax_soc or parameters.ess_relax_day_balance or \
+            parameters.ess_relax_comp or parameters.ess_relax_apparent_power or parameters.ess_relax_soc or parameters.ess_relax_day_balance or \
             parameters.fl_relax or \
             parameters.interface_pf_relax or parameters.interface_ess_relax:
         parameters.slacks_used = True
