@@ -1969,6 +1969,8 @@ def _process_results(network, model, params, results=dict()):
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['sdch_down'][node_id].append(slack_sdch_down)
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['soc_up'][node_id].append(slack_soc_up)
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['soc_down'][node_id].append(slack_soc_down)
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['day_balance_up'][node_id] = pe.value(model.shared_es_penalty_day_balance_up[e, s_m, s_o])
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['day_balance_down'][node_id] = pe.value(model.shared_es_penalty_day_balance_up[e, s_m, s_o])
 
                 # ESS
                 if params.ess_relax:
@@ -1996,6 +1998,8 @@ def _process_results(network, model, params, results=dict()):
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['sdch_down'][node_id].append(slack_sdch_down)
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['soc_up'][node_id].append(slack_soc_up)
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['soc_down'][node_id].append(slack_soc_down)
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['day_balance_up'][node_id] = pe.value(model.shared_es_penalty_day_balance_up[e, s_m, s_o])
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['energy_storages']['day_balance_down'][node_id] = pe.value(model.shared_es_penalty_day_balance_up[e, s_m, s_o])
 
                 # Flex daily balance
                 if params.fl_reg and params.fl_relax:
