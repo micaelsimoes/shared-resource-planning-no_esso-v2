@@ -330,7 +330,8 @@ def _build_model(network, params):
         model.flex_p_up = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.flex_p_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         if params.fl_relax:
-            model.flex_penalty = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, domain=pe.NonNegativeReals, initialize=0.0)
+            model.flex_penalty_up = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, domain=pe.NonNegativeReals, initialize=0.0)
+            model.flex_penalty_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, domain=pe.NonNegativeReals, initialize=0.0)
         for i in model.nodes:
             node = network.nodes[i]
             for s_m in model.scenarios_market:
@@ -547,7 +548,7 @@ def _build_model(network, params):
                         model.fl_p_balance.add(p_up - p_down >= -SMALL_TOLERANCE)   # Note: helps with convergence (numerical issues)
                         model.fl_p_balance.add(p_up - p_down <= SMALL_TOLERANCE)
                     else:
-                        model.fl_p_balance.add(p_up - p_down <= model.flex_penalty[i, s_m, s_o])   # Note: helps with convergence (numerical issues)
+                        model.fl_p_balance.add(p_up - p_down <= model.flex_penalty_up[i, s_m, s_o] + model.flex_penalty_down[i, s_m, s_o])
 
     # - Energy Storage constraints
     if params.es_reg:
@@ -967,6 +968,8 @@ def _build_model(network, params):
                             cost_flex = node.flexibility.cost[p]
                             flex_p_down = model.flex_p_up[i, s_m, s_o, p]
                             obj_scenario += cost_flex * network.baseMVA * (flex_p_down)
+                        if params.fl_reg and params.fl_relax:
+                            obj_scenario += PENALTY_FLEX * (model.flex_penalty_up[i, s_m, s_o] + model.flex_penalty_down[i, s_m, s_o])
 
                 # Load curtailment
                 if params.l_curt:
@@ -1018,12 +1021,6 @@ def _build_model(network, params):
                         obj_scenario += PENALTY_ESS_DAY_BALANCE * (model.shared_es_penalty_day_balance_up[e, s_m, s_o] + model.shared_es_penalty_day_balance_down[e, s_m, s_o])
 
                 obj += obj_scenario * omega_market * omega_oper
-
-        if params.fl_reg and params.fl_relax:
-            for i in model.nodes:
-                for s_m in model.scenarios_market:
-                    for s_o in model.scenarios_operation:
-                        obj += PENALTY_FLEX * (model.flex_penalty[i, s_m, s_o])
 
         if params.interface_relax:
             if network.is_transmission:
@@ -1084,6 +1081,11 @@ def _build_model(network, params):
                             obj_scenario += PENALTY_LOAD_CURTAILMENT * pc_curt
                             obj_scenario += PENALTY_LOAD_CURTAILMENT * qc_curt
 
+                # Flexibility day balance
+                if params.fl_reg and params.fl_relax:
+                    for i in model.nodes:
+                        obj_scenario += PENALTY_FLEX * (model.flex_penalty_up[i, s_m, s_o] + model.flex_penalty_down[i, s_m, s_o])
+
                 # ESS complementarity constraints penalty
                 if params.ess_relax:
                     for e in model.energy_storages:
@@ -1102,12 +1104,6 @@ def _build_model(network, params):
                         obj_scenario += PENALTY_ESS_DAY_BALANCE * (model.shared_es_penalty_day_balance_up[e, s_m, s_o] + model.shared_es_penalty_day_balance_down[e, s_m, s_o])
 
                 obj += obj_scenario * omega_market * omega_oper
-
-        if params.fl_reg and params.fl_relax:
-            for i in model.nodes:
-                for s_m in model.scenarios_market:
-                    for s_o in model.scenarios_operation:
-                        obj += PENALTY_FLEX * (model.flex_penalty[i, s_m, s_o])
 
         for e in model.shared_energy_storages:
             obj += PENALTY_ESS_SLACK * (model.shared_es_s_slack_up[e] + model.shared_es_s_slack_down[e])
@@ -1729,7 +1725,8 @@ def _process_results(network, model, params, results=dict()):
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['shared_energy_storages']['day_balance_down'] = dict()
                 if params.fl_relax:
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility'] = dict()
-                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance_up'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance_down'] = dict()
                 if params.interface_relax:
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['vmag_sqr_up'] = dict()
@@ -2005,7 +2002,8 @@ def _process_results(network, model, params, results=dict()):
                 if params.fl_reg and params.fl_relax:
                     for i in model.nodes:
                         node_id = network.nodes[i].bus_i
-                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance'][node_id] = pe.value(model.flex_penalty[e, s_m, s_o])
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance_up'][node_id] = pe.value(model.flex_penalty_up[e, s_m, s_o])
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance_down'][node_id] = pe.value(model.flex_penalty_down[e, s_m, s_o])
 
                 # Interface
                 if params.interface_relax:
