@@ -4191,6 +4191,40 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
 
+                    # Generators' voltage set-point
+                    if params.gen_v_relax:
+                        for node_id in results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['gen_voltage']['v_up']:
+
+                            # v_up
+                            sheet.cell(row=row_idx, column=1).value = operator_type
+                            sheet.cell(row=row_idx, column=2).value = tn_node_id
+                            sheet.cell(row=row_idx, column=3).value = node_id
+                            sheet.cell(row=row_idx, column=4).value = int(year)
+                            sheet.cell(row=row_idx, column=5).value = day
+                            sheet.cell(row=row_idx, column=6).value = 'Generator voltage, v_up'
+                            sheet.cell(row=row_idx, column=7).value = s_m
+                            sheet.cell(row=row_idx, column=8).value = s_o
+                            for p in range(network[year][day].num_instants):
+                                slack_v_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['gen_voltage']['v_up'][node_id][p]
+                                sheet.cell(row=row_idx, column=p + 9).value = slack_v_up
+                                sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
+                            row_idx = row_idx + 1
+
+                            # v_down
+                            sheet.cell(row=row_idx, column=1).value = operator_type
+                            sheet.cell(row=row_idx, column=2).value = tn_node_id
+                            sheet.cell(row=row_idx, column=3).value = node_id
+                            sheet.cell(row=row_idx, column=4).value = int(year)
+                            sheet.cell(row=row_idx, column=5).value = day
+                            sheet.cell(row=row_idx, column=6).value = 'Generator voltage, v_down'
+                            sheet.cell(row=row_idx, column=7).value = s_m
+                            sheet.cell(row=row_idx, column=8).value = s_o
+                            for p in range(network[year][day].num_instants):
+                                slack_v_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['gen_voltage']['v_down'][node_id][p]
+                                sheet.cell(row=row_idx, column=p + 9).value = slack_v_down
+                                sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
+                            row_idx = row_idx + 1
+
                     # Interface
                     if params.interface_pf_relax:
                         for node_id in results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['vmag_sqr_up']:

@@ -1803,6 +1803,10 @@ def _process_results(network, model, params, results=dict()):
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['p_down'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['q_up'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['q_down'] = dict()
+                if params.gen_v_relax:
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['gen_voltage'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['gen_voltage']['v_up'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['gen_voltage']['v_down'] = dict()
                 if params.interface_pf_relax or params.interface_ess_relax:
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface'] = dict()
                     if params.interface_pf_relax:
@@ -2122,6 +2126,18 @@ def _process_results(network, model, params, results=dict()):
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['p_down'][node_id].append(slack_p_down)
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['q_up'][node_id].append(slack_q_up)
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['q_down'][node_id].append(slack_q_down)
+
+                # Generators' voltage set-point
+                if params.gen_v_relax:
+                    for i in model.nodes:
+                        node_id = network.nodes[i].bus_i
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['gen_voltage']['v_up'][node_id] = []
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['gen_voltage']['v_up'][node_id] = []
+                        for p in model.periods:
+                            slack_v_up = pe.value(model.gen_v_penalty_up[i, s_m, s_o, p])
+                            slack_v_down = pe.value(model.gen_v_penalty_down[i, s_m, s_o, p])
+                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['gen_voltage']['v_up'][node_id].append(slack_v_up)
+                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['gen_voltage']['v_up'][node_id].append(slack_v_down)
 
                 # Interface PF and Vmag
                 if params.interface_pf_relax:
