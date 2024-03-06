@@ -4400,8 +4400,8 @@ def _get_initial_candidate_solution(planning_problem):
             candidate_solution['investment'][node_id][year]['s'] = 0.00
             candidate_solution['investment'][node_id][year]['e'] = 0.00
             candidate_solution['total_capacity'][node_id][year] = dict()
-            candidate_solution['total_capacity'][node_id][year]['s'] = 10.00
-            candidate_solution['total_capacity'][node_id][year]['e'] = 2.50
+            candidate_solution['total_capacity'][node_id][year]['s'] = 0.00
+            candidate_solution['total_capacity'][node_id][year]['e'] = 0.00
     return candidate_solution
 
 
