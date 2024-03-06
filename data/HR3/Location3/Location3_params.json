@@ -8,7 +8,7 @@
 	"enforce_vg": false,
 	"slack_line_limits": true,
 	"slack_voltage_limits": true,
-	"ess_relax_comp": false,
+	"ess_relax_comp": true,
 	"ess_relax_apparent_power": true,
 	"ess_relax_soc": true,
 	"ess_relax_day_balance": true,
