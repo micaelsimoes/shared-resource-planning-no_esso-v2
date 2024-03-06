@@ -256,7 +256,7 @@ def _build_model(network, params):
     # - Generation
     model.pg = pe.Var(model.generators, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
     model.qg = pe.Var(model.generators, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
-    if params.gen_v_relax:
+    if params.enforce_vg and params.gen_v_relax:
         model.gen_v_penalty_up = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
         model.gen_v_penalty_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
     for g in model.generators:
@@ -1043,7 +1043,7 @@ def _build_model(network, params):
                             obj_scenario += PENALTY_NODE_BALANCE * (model.node_balance_penalty_q_up[i, s_m, s_o, p] + model.node_balance_penalty_q_down[i, s_m, s_o, p])
 
                 # Generators voltage set-point penalty
-                if params.gen_v_relax:
+                if params.enforce_vg and params.gen_v_relax:
                     for i in model.nodes:
                         for p in model.periods:
                             obj_scenario += PENALTY_GEN_SETPOINT * (model.gen_v_penalty_up[i, s_m, s_o, p] + model.gen_v_penalty_up[i, s_m, s_o, p])
@@ -1155,7 +1155,7 @@ def _build_model(network, params):
                             obj_scenario += PENALTY_NODE_BALANCE * (model.node_balance_penalty_q_up[i, s_m, s_o, p] + model.node_balance_penalty_q_down[i, s_m, s_o, p])
 
                 # Generators voltage set-point penalty
-                if params.gen_v_relax:
+                if params.enforce_vg and params.gen_v_relax:
                     for i in model.nodes:
                         for p in model.periods:
                             obj_scenario += PENALTY_GEN_SETPOINT * (model.gen_v_penalty_up[i, s_m, s_o, p] + model.gen_v_penalty_up[i, s_m, s_o, p])
@@ -2128,7 +2128,7 @@ def _process_results(network, model, params, results=dict()):
                             processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['q_down'][node_id].append(slack_q_down)
 
                 # Generators' voltage set-point
-                if params.gen_v_relax:
+                if params.enforce_vg and params.gen_v_relax:
                     for i in model.nodes:
                         node_id = network.nodes[i].bus_i
                         processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['gen_voltage']['v_up'][node_id] = []
