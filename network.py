@@ -2267,7 +2267,6 @@ def _compute_objective_function_value(network, model, params):
     if params.obj_type == OBJ_MIN_COST:
 
         c_p = network.cost_energy_p
-        #c_q = network.cost_energy_q
 
         for s_m in model.scenarios_market:
             for s_o in model.scenarios_operation:
@@ -2286,8 +2285,8 @@ def _compute_objective_function_value(network, model, params):
                         node = network.nodes[i]
                         for p in model.periods:
                             cost_flex = node.flexibility.cost[p]
-                            flex_down = pe.value(model.flex_p_down[i, s_m, s_o, p])
-                            obj_scenario += cost_flex * network.baseMVA * flex_down
+                            flex_up = pe.value(model.flex_p_up[i, s_m, s_o, p])
+                            obj_scenario += cost_flex * network.baseMVA * flex_up
 
                 # Load curtailment
                 if params.l_curt:
@@ -2326,7 +2325,11 @@ def _compute_objective_function_value(network, model, params):
                     for i in model.nodes:
                         for p in model.periods:
                             pc_curt = model.pc_curt[i, s_m, s_o, p]
+                            qc_curt = model.qc_curt[i, s_m, s_o, p]
                             obj_scenario += PENALTY_LOAD_CURTAILMENT * pc_curt
+                            obj_scenario += PENALTY_LOAD_CURTAILMENT * qc_curt
+
+                obj += obj_scenario * (network.prob_market_scenarios[s_m] * network.prob_operation_scenarios[s_o])
 
     return obj
 
