@@ -4255,32 +4255,32 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
 
-                            # qf_p, up
+                            # pf_q, up
                             sheet.cell(row=row_idx, column=1).value = operator_type
                             sheet.cell(row=row_idx, column=2).value = tn_node_id
                             sheet.cell(row=row_idx, column=3).value = node_id
                             sheet.cell(row=row_idx, column=4).value = int(year)
                             sheet.cell(row=row_idx, column=5).value = day
-                            sheet.cell(row=row_idx, column=6).value = 'Interface, qf_p up'
+                            sheet.cell(row=row_idx, column=6).value = 'Interface, pf_q up'
                             sheet.cell(row=row_idx, column=7).value = 'N/A'
                             sheet.cell(row=row_idx, column=8).value = 'N/A'
                             for p in range(network[year][day].num_instants):
-                                slack_pf_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['qf_p_up'][node_id][p]
+                                slack_pf_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['pf_q_up'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_pf_up
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
 
-                            # qf_p, down
+                            # pf_q, down
                             sheet.cell(row=row_idx, column=1).value = operator_type
                             sheet.cell(row=row_idx, column=2).value = tn_node_id
                             sheet.cell(row=row_idx, column=3).value = node_id
                             sheet.cell(row=row_idx, column=4).value = int(year)
                             sheet.cell(row=row_idx, column=5).value = day
-                            sheet.cell(row=row_idx, column=6).value = 'Interface, qf_p down'
+                            sheet.cell(row=row_idx, column=6).value = 'Interface, pf_q down'
                             sheet.cell(row=row_idx, column=7).value = 'N/A'
                             sheet.cell(row=row_idx, column=8).value = 'N/A'
                             for p in range(network[year][day].num_instants):
-                                slack_pf_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['qf_p_down'][node_id][p]
+                                slack_pf_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['pf_q_down'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_pf_down
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
