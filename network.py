@@ -326,6 +326,11 @@ def _build_model(network, params):
                 for p in model.periods:
                     model.pc[i, s_m, s_o, p].fix(node.pd[s_o][p])
                     model.qc[i, s_m, s_o, p].fix(node.qd[s_o][p])
+    if params.node_balance_relax:
+        model.node_balance_penalty_p_up = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
+        model.node_balance_penalty_p_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
+        model.node_balance_penalty_q_up = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
+        model.node_balance_penalty_q_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
     if params.fl_reg:
         model.flex_p_up = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
         model.flex_p_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.NonNegativeReals, initialize=0.0)
@@ -789,10 +794,14 @@ def _build_model(network, params):
                                 Qi -= (branch.b + branch.b_sh * 0.5) * (ei ** 2 + fi ** 2)
                                 Qi += rij * (branch.b * (ei * ej + fi * fj) - branch.g * (fi * ej - ei * fj))
 
-                    model.node_balance_cons_p.add(Pg - Pd - Pi >= -SMALL_TOLERANCE)
-                    model.node_balance_cons_p.add(Pg - Pd - Pi <= SMALL_TOLERANCE)
-                    model.node_balance_cons_q.add(Qg - Qd - Qi >= -SMALL_TOLERANCE)
-                    model.node_balance_cons_q.add(Qg - Qd - Qi <= SMALL_TOLERANCE)
+                    if params.node_balance_relax:
+                        model.node_balance_cons_p.add(Pg - Pd - Pi == model.node_balance_penalty_p_up[i, s_m, s_o, p] - model.node_balance_penalty_p_down[i, s_m, s_o, p])
+                        model.node_balance_cons_q.add(Qg - Qd - Qi == model.node_balance_penalty_q_up[i, s_m, s_o, p] + model.node_balance_penalty_q_down[i, s_m, s_o, p])
+                    else:
+                        model.node_balance_cons_p.add(Pg - Pd - Pi >= -SMALL_TOLERANCE)
+                        model.node_balance_cons_p.add(Pg - Pd - Pi <= SMALL_TOLERANCE)
+                        model.node_balance_cons_q.add(Qg - Qd - Qi >= -SMALL_TOLERANCE)
+                        model.node_balance_cons_q.add(Qg - Qd - Qi <= SMALL_TOLERANCE)
 
     # - Branch Power Flow constraints (current)
     model.branch_power_flow_cons = pe.ConstraintList()
@@ -1019,6 +1028,12 @@ def _build_model(network, params):
                     if params.ess_relax_day_balance:
                         obj_scenario += PENALTY_ESS_DAY_BALANCE * (model.shared_es_penalty_day_balance_up[e, s_m, s_o] + model.shared_es_penalty_day_balance_down[e, s_m, s_o])
 
+                if params.node_balance_relax:
+                    for i in model.nodes:
+                        for p in model.periods:
+                            obj_scenario += PENALTY_NODE_BALANCE * (model.node_balance_penalty_p_up[i, s_m, s_o, p] + model.node_balance_penalty_p_down[i, s_m, s_o, p])
+                            obj_scenario += PENALTY_NODE_BALANCE * (model.node_balance_penalty_q_up[i, s_m, s_o, p] + model.node_balance_penalty_q_down[i, s_m, s_o, p])
+
                 obj += obj_scenario * omega_market * omega_oper
 
         if network.is_transmission:
@@ -1117,6 +1132,12 @@ def _build_model(network, params):
                             obj_scenario += PENALTY_ESS_SOC * (model.shared_es_penalty_soc_up[e, s_m, s_o, p] + model.shared_es_penalty_soc_down[e, s_m, s_o, p])
                     if params.ess_relax_day_balance:
                         obj_scenario += PENALTY_ESS_DAY_BALANCE * (model.shared_es_penalty_day_balance_up[e, s_m, s_o] + model.shared_es_penalty_day_balance_down[e, s_m, s_o])
+
+                if params.node_balance_relax:
+                    for i in model.nodes:
+                        for p in model.periods:
+                            obj_scenario += PENALTY_NODE_BALANCE * (model.node_balance_penalty_p_up[i, s_m, s_o, p] + model.node_balance_penalty_p_down[i, s_m, s_o, p])
+                            obj_scenario += PENALTY_NODE_BALANCE * (model.node_balance_penalty_q_up[i, s_m, s_o, p] + model.node_balance_penalty_q_down[i, s_m, s_o, p])
 
                 obj += obj_scenario * omega_market * omega_oper
 
@@ -1755,6 +1776,12 @@ def _process_results(network, model, params, results=dict()):
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance_up'] = dict()
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance_down'] = dict()
+                if params.node_balance_relax:
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['p_up'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['p_down'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['q_up'] = dict()
+                    processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['q_down'] = dict()
                 if params.interface_pf_relax or params.interface_ess_relax:
                     processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['interface'] = dict()
                     if params.interface_pf_relax:
@@ -2056,6 +2083,24 @@ def _process_results(network, model, params, results=dict()):
                         node_id = network.nodes[i].bus_i
                         processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance_up'][node_id] = pe.value(model.flex_penalty_up[e, s_m, s_o])
                         processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['flexibility']['day_balance_down'][node_id] = pe.value(model.flex_penalty_down[e, s_m, s_o])
+
+                # Node balance
+                if params.node_balance_relax:
+                    for i in model.nodes:
+                        node_id = network.nodes[i].bus_i
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['p_up'][node_id] = []
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['p_down'][node_id] = []
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['q_up'][node_id] = []
+                        processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['q_down'][node_id] = []
+                        for p in model.periods:
+                            slack_p_up = pe.value(model.node_balance_penalty_p_up[i, s_m, s_o, p])
+                            slack_p_down = pe.value(model.node_balance_penalty_p_down[i, s_m, s_o, p])
+                            slack_q_up = pe.value(model.node_balance_penalty_q_up[i, s_m, s_o, p])
+                            slack_q_down = pe.value(model.node_balance_penalty_q_down[i, s_m, s_o, p])
+                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['p_up'][node_id].append(slack_p_up)
+                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['p_down'][node_id].append(slack_p_down)
+                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['q_up'][node_id].append(slack_q_up)
+                            processed_results['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['q_down'][node_id].append(slack_q_down)
 
                 # Interface PF and Vmag
                 if params.interface_pf_relax:

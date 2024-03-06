@@ -23,6 +23,7 @@ class NetworkParameters:
         self.ess_relax_soc = False
         self.ess_relax_day_balance = False
         self.fl_relax = False
+        self.node_balance_relax = False
         self.interface_pf_relax = False
         self.interface_ess_relax = False
         self.slacks_used = False
@@ -59,6 +60,7 @@ def _read_network_parameters_from_file(parameters, filename):
     parameters.ess_relax_soc = params_data['ess_relax_soc']
     parameters.ess_relax_day_balance = params_data['ess_relax_day_balance']
     parameters.fl_relax = params_data['fl_relax']
+    parameters.node_balance_relax = params_data['node_balance_relax']
     parameters.interface_pf_relax = params_data['interface_pf_relax']
     parameters.interface_ess_relax = params_data['interface_ess_relax']
     parameters.solver_params.read_solver_parameters(params_data['solver'])
@@ -68,6 +70,6 @@ def _read_network_parameters_from_file(parameters, filename):
 
     if parameters.slack_voltage_limits or parameters.slack_line_limits or \
             parameters.ess_relax_comp or parameters.ess_relax_apparent_power or parameters.ess_relax_soc or parameters.ess_relax_day_balance or \
-            parameters.fl_relax or \
+            parameters.fl_relax or parameters.node_balance_relax or \
             parameters.interface_pf_relax or parameters.interface_ess_relax:
         parameters.slacks_used = True
