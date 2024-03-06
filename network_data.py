@@ -2260,7 +2260,7 @@ def _write_relaxation_slacks_results_to_excel(network_planning, workbook, result
                                 sheet.cell(row=row_idx, column=1).value = node_id
                                 sheet.cell(row=row_idx, column=2).value = int(year)
                                 sheet.cell(row=row_idx, column=3).value = day
-                                sheet.cell(row=row_idx, column=4).value = 'ESS, day_balance_down'
+                                sheet.cell(row=row_idx, column=4).value = 'Shared ESS, day_balance_down'
                                 sheet.cell(row=row_idx, column=5).value = s_m
                                 sheet.cell(row=row_idx, column=6).value = s_o
                                 for p in range(network_planning.num_instants):
