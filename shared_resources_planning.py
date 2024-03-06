@@ -4141,7 +4141,7 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                             sheet.cell(row=row_idx, column=7).value = s_m
                             sheet.cell(row=row_idx, column=8).value = s_o
                             for p in range(network[year][day].num_instants):
-                                slack_p_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['p_up'][node_id]
+                                slack_p_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['p_up'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_p_up
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
@@ -4156,7 +4156,7 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                             sheet.cell(row=row_idx, column=7).value = s_m
                             sheet.cell(row=row_idx, column=8).value = s_o
                             for p in range(network[year][day].num_instants):
-                                slack_p_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['p_down'][node_id]
+                                slack_p_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['p_down'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_p_down
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
@@ -4171,7 +4171,7 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                             sheet.cell(row=row_idx, column=7).value = s_m
                             sheet.cell(row=row_idx, column=8).value = s_o
                             for p in range(network[year][day].num_instants):
-                                slack_q_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['q_up'][node_id]
+                                slack_q_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['q_up'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_q_up
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
@@ -4186,7 +4186,7 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                             sheet.cell(row=row_idx, column=7).value = s_m
                             sheet.cell(row=row_idx, column=8).value = s_o
                             for p in range(network[year][day].num_instants):
-                                slack_q_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['q_down'][node_id]
+                                slack_q_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['node_balance']['q_down'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_q_down
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
@@ -4205,7 +4205,7 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                             sheet.cell(row=row_idx, column=7).value = 'N/A'
                             sheet.cell(row=row_idx, column=8).value = 'N/A'
                             for p in range(network[year][day].num_instants):
-                                slack_v_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['vmag_sqr_up'][node_id]
+                                slack_v_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['vmag_sqr_up'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_v_up
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
@@ -4220,7 +4220,7 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                             sheet.cell(row=row_idx, column=7).value = 'N/A'
                             sheet.cell(row=row_idx, column=8).value = 'N/A'
                             for p in range(network[year][day].num_instants):
-                                slack_v_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['vmag_sqr_down'][node_id]
+                                slack_v_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['vmag_sqr_down'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_v_down
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
@@ -4235,7 +4235,7 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                             sheet.cell(row=row_idx, column=7).value = 'N/A'
                             sheet.cell(row=row_idx, column=8).value = 'N/A'
                             for p in range(network[year][day].num_instants):
-                                slack_pf_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['pf_p_up'][node_id]
+                                slack_pf_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['pf_p_up'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_pf_up
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
@@ -4250,7 +4250,7 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                             sheet.cell(row=row_idx, column=7).value = 'N/A'
                             sheet.cell(row=row_idx, column=8).value = 'N/A'
                             for p in range(network[year][day].num_instants):
-                                slack_pf_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['pf_p_down'][node_id]
+                                slack_pf_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['pf_p_down'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_pf_down
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
@@ -4265,7 +4265,7 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                             sheet.cell(row=row_idx, column=7).value = 'N/A'
                             sheet.cell(row=row_idx, column=8).value = 'N/A'
                             for p in range(network[year][day].num_instants):
-                                slack_pf_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['qf_p_up'][node_id]
+                                slack_pf_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['qf_p_up'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_pf_up
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
@@ -4280,7 +4280,7 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                             sheet.cell(row=row_idx, column=7).value = 'N/A'
                             sheet.cell(row=row_idx, column=8).value = 'N/A'
                             for p in range(network[year][day].num_instants):
-                                slack_pf_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['qf_p_down'][node_id]
+                                slack_pf_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['qf_p_down'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_pf_down
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
@@ -4299,7 +4299,7 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                             sheet.cell(row=row_idx, column=7).value = 'N/A'
                             sheet.cell(row=row_idx, column=8).value = 'N/A'
                             for p in range(network[year][day].num_instants):
-                                slack_p_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['ess_p_up'][node_id]
+                                slack_p_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['ess_p_up'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_p_up
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
@@ -4314,7 +4314,7 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                             sheet.cell(row=row_idx, column=7).value = 'N/A'
                             sheet.cell(row=row_idx, column=8).value = 'N/A'
                             for p in range(network[year][day].num_instants):
-                                slack_p_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['ess_p_down'][node_id]
+                                slack_p_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['ess_p_down'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_p_down
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
@@ -4329,7 +4329,7 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                             sheet.cell(row=row_idx, column=7).value = 'N/A'
                             sheet.cell(row=row_idx, column=8).value = 'N/A'
                             for p in range(network[year][day].num_instants):
-                                slack_q_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['ess_q_up'][node_id]
+                                slack_q_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['ess_q_up'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_q_up
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
@@ -4344,7 +4344,7 @@ def _write_relaxation_slacks_results_per_operator(network, sheet, operator_type,
                             sheet.cell(row=row_idx, column=7).value = 'N/A'
                             sheet.cell(row=row_idx, column=8).value = 'N/A'
                             for p in range(network[year][day].num_instants):
-                                slack_q_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['ess_q_down'][node_id]
+                                slack_q_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['interface']['ess_q_down'][node_id][p]
                                 sheet.cell(row=row_idx, column=p + 9).value = slack_q_down
                                 sheet.cell(row=row_idx, column=p + 9).number_format = decimal_style
                             row_idx = row_idx + 1
