@@ -528,8 +528,8 @@ def _build_model(network, params):
                             # - Voltage at the bus is not controlled
                             e = model.e_actual[i, s_m, s_o, p]
                             f = model.f_actual[i, s_m, s_o, p]
-                            model.voltage_cons.add(e ** 2 + f ** 2 >= (node.v_min - SMALL_TOLERANCE)**2)
-                            model.voltage_cons.add(e ** 2 + f ** 2 <= (node.v_max + SMALL_TOLERANCE)**2)
+                            model.voltage_cons.add(e ** 2 + f ** 2 >= node.v_min**2 - SMALL_TOLERANCE)
+                            model.voltage_cons.add(e ** 2 + f ** 2 <= node.v_max**2 + SMALL_TOLERANCE)
                     elif node.type == BUS_PQ:
                         e = model.e_actual[i, s_m, s_o, p]
                         f = model.f_actual[i, s_m, s_o, p]
@@ -538,8 +538,8 @@ def _build_model(network, params):
                         if params.slack_voltage_limits:
                             slack_v_up_sqr += model.slack_e_up[i, s_m, s_o, p] ** 2 + model.slack_f_up[i, s_m, s_o, p] ** 2
                             slack_v_down_sqr += model.slack_e_down[i, s_m, s_o, p] ** 2 + model.slack_f_down[i, s_m, s_o, p] ** 2
-                        model.voltage_cons.add(e ** 2 + f ** 2 + slack_v_down_sqr >= (node.v_min - SMALL_TOLERANCE) ** 2)
-                        model.voltage_cons.add(e ** 2 + f ** 2 - slack_v_up_sqr <= (node.v_max + SMALL_TOLERANCE) ** 2)
+                        model.voltage_cons.add(e ** 2 + f ** 2 + slack_v_down_sqr >= node.v_min**2 - SMALL_TOLERANCE)
+                        model.voltage_cons.add(e ** 2 + f ** 2 - slack_v_up_sqr <= node.v_max**2 + SMALL_TOLERANCE)
 
     # - Flexible Loads -- Daily energy balance
     if params.fl_reg:
