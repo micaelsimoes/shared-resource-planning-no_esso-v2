@@ -2317,15 +2317,15 @@ def _compute_objective_function_value(network, model, params):
                 if params.rg_curt:
                     for g in model.generators:
                         for p in model.periods:
-                            pg_curt = model.pg_curt[g, s_m, s_o, p]
+                            pg_curt = pe.value(model.pg_curt[g, s_m, s_o, p])
                             obj_scenario += PENALTY_GENERATION_CURTAILMENT * pg_curt
 
                 # Consumption curtailment
                 if params.l_curt:
                     for i in model.nodes:
                         for p in model.periods:
-                            pc_curt = model.pc_curt[i, s_m, s_o, p]
-                            qc_curt = model.qc_curt[i, s_m, s_o, p]
+                            pc_curt = pe.value(model.pc_curt[i, s_m, s_o, p])
+                            qc_curt = pe.value(model.qc_curt[i, s_m, s_o, p])
                             obj_scenario += PENALTY_LOAD_CURTAILMENT * pc_curt
                             obj_scenario += PENALTY_LOAD_CURTAILMENT * qc_curt
 
