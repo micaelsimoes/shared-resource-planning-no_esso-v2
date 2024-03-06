@@ -10,14 +10,14 @@
 		"adaptive_penalty": true,
 		"rho": {
 			"pf": {
-				"Location3": 1.00,
-				"ZG_Demo_1": 2.00,
-				"ZG_Demo_2": 2.00
+				"Location3": 2.00,
+				"ZG_Demo_1": 1.00,
+				"ZG_Demo_2": 1.00
 			},
 			"ess": {
-				"Location3": 1.00,
-				"ZG_Demo_1": 2.00,
-				"ZG_Demo_2": 2.00
+				"Location3": 2.00,
+				"ZG_Demo_1": 1.00,
+				"ZG_Demo_2": 1.00
 			}
 		}
 	}
