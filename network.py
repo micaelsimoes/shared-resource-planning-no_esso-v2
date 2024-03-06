@@ -256,6 +256,9 @@ def _build_model(network, params):
     # - Generation
     model.pg = pe.Var(model.generators, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
     model.qg = pe.Var(model.generators, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
+    if params.gen_v_relax:
+        model.gen_v_penalty_up = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
+        model.gen_v_penalty_down = pe.Var(model.nodes, model.scenarios_market, model.scenarios_operation, model.periods, domain=pe.Reals, initialize=0.0)
     for g in model.generators:
         gen = network.generators[g]
         pg_ub, pg_lb = gen.pmax, gen.pmin
@@ -527,8 +530,12 @@ def _build_model(network, params):
                             vg = network.generators[gen_idx].vg
                             e = model.e_actual[i, s_m, s_o, p]
                             f = model.e_actual[i, s_m, s_o, p]
-                            model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 >= -SMALL_TOLERANCE)
-                            model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= SMALL_TOLERANCE)
+                            if params.gen_v_relax:
+                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 >= model.gen_v_penalty_up[i, s_m, s_o, p] - model.gen_v_penalty_down[i, s_m, s_o, p] + SMALL_TOLERANCE)
+                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= model.gen_v_penalty_up[i, s_m, s_o, p] - model.gen_v_penalty_down[i, s_m, s_o, p] - SMALL_TOLERANCE)
+                            else:
+                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 >= -SMALL_TOLERANCE)
+                                model.voltage_cons.add(e ** 2 + f ** 2 - vg[p] ** 2 <= SMALL_TOLERANCE)
                         else:
                             # - Voltage at the bus is not controlled
                             e = model.e_actual[i, s_m, s_o, p]
@@ -1028,11 +1035,18 @@ def _build_model(network, params):
                     if params.ess_relax_day_balance:
                         obj_scenario += PENALTY_ESS_DAY_BALANCE * (model.shared_es_penalty_day_balance_up[e, s_m, s_o] + model.shared_es_penalty_day_balance_down[e, s_m, s_o])
 
+                # Node balance penalty
                 if params.node_balance_relax:
                     for i in model.nodes:
                         for p in model.periods:
                             obj_scenario += PENALTY_NODE_BALANCE * (model.node_balance_penalty_p_up[i, s_m, s_o, p] + model.node_balance_penalty_p_down[i, s_m, s_o, p])
                             obj_scenario += PENALTY_NODE_BALANCE * (model.node_balance_penalty_q_up[i, s_m, s_o, p] + model.node_balance_penalty_q_down[i, s_m, s_o, p])
+
+                # Generators voltage set-point penalty
+                if params.gen_v_relax:
+                    for i in model.nodes:
+                        for p in model.periods:
+                            obj_scenario += PENALTY_GEN_SETPOINT * (model.gen_v_penalty_up[i, s_m, s_o, p] + model.gen_v_penalty_up[i, s_m, s_o, p])
 
                 obj += obj_scenario * omega_market * omega_oper
 
@@ -1133,11 +1147,18 @@ def _build_model(network, params):
                     if params.ess_relax_day_balance:
                         obj_scenario += PENALTY_ESS_DAY_BALANCE * (model.shared_es_penalty_day_balance_up[e, s_m, s_o] + model.shared_es_penalty_day_balance_down[e, s_m, s_o])
 
+                # Node balance penalty
                 if params.node_balance_relax:
                     for i in model.nodes:
                         for p in model.periods:
                             obj_scenario += PENALTY_NODE_BALANCE * (model.node_balance_penalty_p_up[i, s_m, s_o, p] + model.node_balance_penalty_p_down[i, s_m, s_o, p])
                             obj_scenario += PENALTY_NODE_BALANCE * (model.node_balance_penalty_q_up[i, s_m, s_o, p] + model.node_balance_penalty_q_down[i, s_m, s_o, p])
+
+                # Generators voltage set-point penalty
+                if params.gen_v_relax:
+                    for i in model.nodes:
+                        for p in model.periods:
+                            obj_scenario += PENALTY_GEN_SETPOINT * (model.gen_v_penalty_up[i, s_m, s_o, p] + model.gen_v_penalty_up[i, s_m, s_o, p])
 
                 obj += obj_scenario * omega_market * omega_oper
 
