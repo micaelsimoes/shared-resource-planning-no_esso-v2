@@ -1,0 +1,15 @@
+{
+	"budget": 3e6,
+	"max_capacity": 2.50,
+	"min_pe_factor": 0.10,
+	"max_pe_factor": 4.00,
+	"ess_relax": false,
+	"plot_results": false,
+	"print_results_to_file": true,
+	"solver": {
+		"name": "ipopt",
+		"linear_solver": "ma57",
+		"solver_tol": 1e-6,
+		"verbose": false
+	}
+}

@@ -1,0 +1,30 @@
+{
+	"benders": {
+		"tol_abs": 1e3,
+		"tol_rel": 1e-2,
+		"num_max_iters": 1000
+	},
+	"admm": {
+		"tol": 5e-2,
+		"num_max_iters": 100,
+		"adaptive_penalty": true,
+		"rho": {
+			"pf": {
+				"case30": 1.00,
+				"case18_1": 1.00,
+				"case18_2": 1.00,
+				"case18_3": 1.00,
+				"case33_1": 1.00,
+				"case33_2": 1.00
+			},
+			"ess": {
+				"case30": 1.00,
+				"case18_1": 1.00,
+				"case18_2": 1.00,
+				"case18_3": 1.00,
+				"case33_1": 1.00,
+				"case33_2": 1.00
+			}
+		}
+	}
+}

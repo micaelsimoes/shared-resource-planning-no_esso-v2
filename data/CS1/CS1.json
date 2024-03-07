@@ -1,0 +1,40 @@
+{
+	"Years": {
+		"2020": 10
+	},
+	"Days": {
+		"Winter": 183,
+		"Summer": 182
+	},
+	"NumInstants": 24,
+	"DiscountFactor": 0.02,
+	"MarketData": "CS1_market_data",
+	"DistributionNetworks": [
+		{
+			"name": "case18_1",
+			"params_file": "case18_params.json",
+			"connection_node_id": 24
+		},
+		{
+			"name": "case18_2",
+			"params_file": "case18_params.json",
+			"connection_node_id": 16
+		},
+		{
+			"name": "case18_3",
+			"params_file": "case18_params.json",
+			"connection_node_id": 18
+		}
+	],
+	"TransmissionNetwork": {
+		"name": "case30",
+		"params_file": "case30_params.json"
+	},
+	"SharedEnegyStorage":{
+		"params_file": "CS1_ESS_Params.json",
+		"data_file": "CS1_ESS.xlsx"
+	},
+	"PlanningParameters": {
+		"params_file": "CS1_params.json"
+	}
+}
