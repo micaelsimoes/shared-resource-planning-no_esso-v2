@@ -2368,6 +2368,43 @@ def _write_relaxation_slacks_results_to_excel(network_planning, workbook, result
                                 sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
                             row_idx = row_idx + 1
 
+    if params.branch_current_relax:
+
+        for year in results:
+            for day in results[year]:
+                network = network_planning.network[year][day]
+                for s_m in results[year][day]['scenarios']:
+                    for s_o in results[year][day]['scenarios'][s_m]:
+                        for k in results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['branch_current']['iij_sqr_up']:
+
+                            branch_id = network.branches[k].branch_id
+
+                            # - iij_sqr_up
+                            sheet.cell(row=row_idx, column=1).value = branch_id
+                            sheet.cell(row=row_idx, column=2).value = int(year)
+                            sheet.cell(row=row_idx, column=3).value = day
+                            sheet.cell(row=row_idx, column=4).value = 'Current, iij_sqr_up'
+                            sheet.cell(row=row_idx, column=5).value = s_m
+                            sheet.cell(row=row_idx, column=6).value = s_o
+                            for p in range(network_planning.num_instants):
+                                iij_sqr_up = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['branch_current']['iij_sqr_up'][k][p]
+                                sheet.cell(row=row_idx, column=p + 7).value = iij_sqr_up
+                                sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
+                            row_idx = row_idx + 1
+
+                            # - iij_sqr_down
+                            sheet.cell(row=row_idx, column=1).value = branch_id
+                            sheet.cell(row=row_idx, column=2).value = int(year)
+                            sheet.cell(row=row_idx, column=3).value = day
+                            sheet.cell(row=row_idx, column=4).value = 'Current, iij_sqr_down'
+                            sheet.cell(row=row_idx, column=5).value = s_m
+                            sheet.cell(row=row_idx, column=6).value = s_o
+                            for p in range(network_planning.num_instants):
+                                iij_sqr_down = results[year][day]['scenarios'][s_m][s_o]['relaxation_slacks']['branch_current']['iij_sqr_down'][k][p]
+                                sheet.cell(row=row_idx, column=p + 7).value = iij_sqr_down
+                                sheet.cell(row=row_idx, column=p + 7).number_format = decimal_style
+                            row_idx = row_idx + 1
+
     if params.gen_v_relax:
         for year in results:
             for day in results[year]:

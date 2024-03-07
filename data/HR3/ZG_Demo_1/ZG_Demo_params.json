@@ -15,6 +15,7 @@
 	"fl_relax": true,
 	"gen_v_relax": true,
 	"node_balance_relax": true,
+	"branch_current_relax": true,
 	"interface_pf_relax": true,
 	"interface_ess_relax": true,
 	"solver": {
