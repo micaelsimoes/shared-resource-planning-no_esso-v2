@@ -3,6 +3,8 @@ import time
 from math import sqrt, isclose
 from copy import copy
 import pandas as pd
+import networkx as nx
+import matplotlib.pyplot as plt
 import pyomo.opt as po
 import pyomo.environ as pe
 from openpyxl import Workbook
@@ -105,6 +107,9 @@ class SharedResourcesPlanning:
 
     def get_initial_candidate_solution(self):
         return _get_initial_candidate_solution(self)
+
+    def plot_diagram(self):
+        _plot_networkx_diagram(self)
 
     def write_operational_planning_results_to_excel(self, optimization_models, results, primal_evolution=list()):
         filename = os.path.join(self.results_dir, self.name + '_operational_planning_results.xlsx')
@@ -1332,6 +1337,81 @@ def _get_market_costs_from_excel_file(filename, sheet_name, num_scenarios):
         cost_values[scn_idx] = cost_values_scenario
         scn_idx = scn_idx + 1
     return cost_values
+
+
+# ======================================================================================================================
+#   NETWORK diagram functions (plot)
+# ======================================================================================================================
+def _plot_networkx_diagram(planning_problem):
+
+    for year in planning_problem.years:
+        for day in planning_problem.days:
+
+            transmission_network = planning_problem.transmission_network.network[year][day]
+
+            node_labels = {}
+            ref_nodes, pv_nodes, pq_nodes = [], [], []
+            res_pv_nodes = [gen.bus for gen in transmission_network.generators if gen.gen_type == GEN_RES_SOLAR]
+            res_wind_nodes = [gen.bus for gen in transmission_network.generators if gen.gen_type == GEN_RES_WIND]
+            adn_nodes = planning_problem.active_distribution_network_nodes
+
+            branches = []
+            line_list, open_line_list = [], []
+            transf_list, open_transf_list = [], []
+            for branch in transmission_network.branches:
+                if branch.is_transformer:
+                    branches.append({'type': 'transformer', 'data': branch})
+                else:
+                    branches.append({'type': 'line', 'data': branch})
+
+            # Build graph
+            graph = nx.Graph()
+            for i in range(len(transmission_network.nodes)):
+                node = transmission_network.nodes[i]
+                graph.add_node(node.bus_i)
+                node_labels[node.bus_i] = '{}'.format(node.bus_i)
+                if node.type == BUS_REF:
+                    ref_nodes.append(node.bus_i)
+                elif node.type == BUS_PV:
+                    pv_nodes.append(node.bus_i)
+                elif node.type == BUS_PQ:
+                    if node.bus_i not in (res_pv_nodes + res_wind_nodes + adn_nodes):
+                        pq_nodes.append(node.bus_i)
+            for i in range(len(branches)):
+                branch = branches[i]
+                if branch['type'] == 'line':
+                    graph.add_edge(branch['data'].fbus, branch['data'].tbus)
+                    if branch['data'].status == 1:
+                        line_list.append((branch['data'].fbus, branch['data'].tbus))
+                    else:
+                        open_line_list.append((branch['data'].fbus, branch['data'].tbus))
+                if branch['type'] == 'transformer':
+                    graph.add_edge(branch['data'].fbus, branch['data'].tbus)
+                    if branch['data'].status == 1:
+                        transf_list.append((branch['data'].fbus, branch['data'].tbus))
+                    else:
+                        open_transf_list.append((branch['data'].fbus, branch['data'].tbus))
+
+            # Plot diagram
+            pos = nx.spring_layout(graph, k=0.50, iterations=1000)
+            fig, ax = plt.subplots(figsize=(12, 8))
+            nx.draw_networkx_nodes(graph, ax=ax, pos=pos, nodelist=ref_nodes, node_color='red', node_size=250, label='Reference bus')
+            nx.draw_networkx_nodes(graph, ax=ax, pos=pos, nodelist=pv_nodes, node_color='lightgreen', node_size=250, label='Conventional generator')
+            nx.draw_networkx_nodes(graph, ax=ax, pos=pos, nodelist=pq_nodes, node_color='lightblue', node_size=250, label='PQ buses')
+            nx.draw_networkx_nodes(graph, ax=ax, pos=pos, nodelist=res_pv_nodes, node_color='yellow', node_size=250, label='RES, PV')
+            nx.draw_networkx_nodes(graph, ax=ax, pos=pos, nodelist=res_wind_nodes, node_color='blue', node_size=250, label='RES, Wind')
+            nx.draw_networkx_nodes(graph, ax=ax, pos=pos, nodelist=adn_nodes, node_color='orange', node_size=250, label='ADN buses')
+            nx.draw_networkx_labels(graph, ax=ax, pos=pos, labels=node_labels, font_size=12)
+            nx.draw_networkx_edges(graph, ax=ax, pos=pos, edgelist=line_list, width=1.50, edge_color='black')
+            nx.draw_networkx_edges(graph, ax=ax, pos=pos, edgelist=transf_list, width=2.00, edge_color='blue', label='Transformer')
+            nx.draw_networkx_edges(graph, ax=ax, pos=pos, edgelist=open_line_list, style='dashed', width=1.50, edge_color='red')
+            nx.draw_networkx_edges(graph, ax=ax, pos=pos, edgelist=open_transf_list, style='dashed', width=2.00, edge_color='red')
+            plt.legend(scatterpoints=1, frameon=False, prop={'size': 12})
+            plt.axis('off')
+
+            filename = os.path.join(planning_problem.diagrams_dir, f'{planning_problem.name}_{year}_{day}')
+            plt.savefig(f'{filename}.pdf', bbox_inches='tight')
+            plt.savefig(f'{filename}.png', bbox_inches='tight')
 
 
 # ======================================================================================================================
