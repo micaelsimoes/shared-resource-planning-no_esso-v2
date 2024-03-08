@@ -1,0 +1,30 @@
+{
+	"obj_type": "COST",
+	"transf_reg": true,
+	"es_reg": true,
+	"fl_reg": true,
+	"rg_curt": true,
+	"l_curt": false,
+	"enforce_vg": false,
+	"slack_line_limits": true,
+	"slack_voltage_limits": true,
+	"ess_relax_comp": true,
+	"ess_relax_apparent_power": true,
+	"ess_relax_soc": true,
+	"ess_relax_day_balance": true,
+	"fl_relax": true,
+	"gen_v_relax": true,
+	"node_balance_relax": true,
+	"branch_current_relax": true,
+	"interface_pf_relax": true,
+	"interface_ess_relax": true,
+	"solver": {
+		"name": "ipopt",
+		"linear_solver": "ma57",
+		"solver_tol": 1e-6,
+		"verbose": false
+	},
+	"print_to_screen": false,
+	"plot_diagram": false,
+	"print_results_to_file": false
+}
