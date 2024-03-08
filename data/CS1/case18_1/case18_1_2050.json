@@ -1,0 +1,57 @@
+{
+	"baseMVA": 10.0,
+	"bus": [
+		{"bus_i": 1, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 2, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 3, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 4, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 5, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 6, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 7, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 8, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 9, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 20, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 21, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 22, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 23, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 24, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 25, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 26, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 12.5, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 50, "type": 1, "Gs": 0, "Bs": 0, "baseKV": 138, "Vmax": 1.1, "Vmin": 0.9},
+		{"bus_i": 51, "type": 3, "Gs": 0, "Bs": 0, "baseKV": 138, "Vmax": 1.1, "Vmin": 0.9}
+	],
+	"gen": [
+		{"gen_id":1,"bus":51,"Pmax":100,"Pmin":-100,"Qmax":100,"Qmin":-100,"Vg":1.05,"status":1, "type": "REF"},
+		{"gen_id":2,"bus":8,"Pmax":7.50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
+		{"gen_id":3,"bus":9,"Pmax":7.50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
+		{"gen_id":5,"bus":24,"Pmax":5.00,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
+		{"gen_id":6,"bus":26,"Pmax":5.00,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
+		{"gen_id":4,"bus":26,"Pmax":2.50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"}
+	],
+	"line": [
+		{"branch_id": 1, "fbus": 1, "tbus": 2, "r": 0.00431, "x": 0.01204, "b": 0.000035, "rating": 12, "status": 1},
+		{"branch_id": 2, "fbus": 2, "tbus": 3, "r": 0.00601, "x": 0.01677, "b": 0.000049, "rating": 10, "status": 1},
+		{"branch_id": 3, "fbus": 3, "tbus": 4, "r": 0.00316, "x": 0.00882, "b": 0.000026, "rating": 10, "status": 1},
+		{"branch_id": 4, "fbus": 4, "tbus": 5, "r": 0.00896, "x": 0.02502, "b": 0.000073, "rating": 8, "status": 1},
+		{"branch_id": 5, "fbus": 5, "tbus": 6, "r": 0.00295, "x": 0.00824, "b": 0.000024, "rating": 5, "status": 1},
+		{"branch_id": 6, "fbus": 6, "tbus": 7, "r": 0.0172, "x": 0.0212, "b": 0.000046, "rating": 5, "status": 1},
+		{"branch_id": 7, "fbus": 7, "tbus": 8, "r": 0.0407, "x": 0.03053, "b": 0.000051, "rating": 3, "status": 1},
+		{"branch_id": 8, "fbus": 2, "tbus": 9, "r": 0.01706, "x": 0.02209, "b": 0.000043, "rating": 4, "status": 1},
+		{"branch_id": 9, "fbus": 1, "tbus": 20, "r": 0.0291, "x": 0.03768, "b": 0.000074, "rating": 5, "status": 1},
+		{"branch_id": 10, "fbus": 20, "tbus": 21, "r": 0.02222, "x": 0.02877, "b": 0.000056, "rating": 3, "status": 1},
+		{"branch_id": 11, "fbus": 21, "tbus": 22, "r": 0.04803, "x": 0.06218, "b": 0.000122, "rating": 1, "status": 1},
+		{"branch_id": 12, "fbus": 21, "tbus": 23, "r": 0.03985, "x": 0.0516, "b": 0.000101, "rating": 2, "status": 1},
+		{"branch_id": 13, "fbus": 23, "tbus": 24, "r": 0.0291, "x": 0.03768, "b": 0.000074, "rating": 2, "status": 1},
+		{"branch_id": 14, "fbus": 23, "tbus": 25, "r": 0.03727, "x": 0.04593, "b": 0.0001, "rating": 2, "status": 1},
+		{"branch_id": 15, "fbus": 25, "tbus": 26, "r": 0.01104, "x": 0.0136, "b": 0.000118, "rating": 2, "status": 1},
+		{"branch_id": 17, "fbus": 50, "tbus": 51, "r": 0.0005, "x": 0.00344, "b": 0, "rating": 20, "status": 1}
+	],
+	"transformer": [
+		{"branch_id": 16, "fbus": 50, "tbus": 1, "r": 0.00312, "x": 0.06753, "b": 0, "rating": 20, "ratio": 1, "status": 1, "vmag_reg": 1}
+	],
+	"energy_storage": [
+		{"es_id": 1, "bus": 23, "s": 1.00, "e": 2.50, "e_init": 1.25, "e_min": 0.25, "e_max": 2.25, "eff_ch": 0.90, "eff_dch": 0.90, "max_pf": 0.80, "min_pf": 0.80}
+		{"es_id": 2, "bus": 20, "s": 1.00, "e": 2.50, "e_init": 1.25, "e_min": 0.25, "e_max": 2.25, "eff_ch": 0.90, "eff_dch": 0.90, "max_pf": 0.80, "min_pf": 0.80}
+		{"es_id": 3, "bus": 25, "s": 1.00, "e": 2.50, "e_init": 1.25, "e_min": 0.25, "e_max": 2.25, "eff_ch": 0.90, "eff_dch": 0.90, "max_pf": 0.80, "min_pf": 0.80}
+	]
+}
