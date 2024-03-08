@@ -39,11 +39,11 @@
 		{"gen_id":4,"bus":27,"Pmax":55,"Pmin":0,"Qmax":48.7,"Qmin":-15,"Vg":1,"status":1, "type": "CONV"},
 		{"gen_id":5,"bus":23,"Pmax":30,"Pmin":0,"Qmax":40,"Qmin":-10,"Vg":1,"status":1, "type": "CONV"},
 		{"gen_id":6,"bus":13,"Pmax":40,"Pmin":0,"Qmax":44.7,"Qmin":-15,"Vg":1,"status":1, "type": "CONV"},
-		{"gen_id":7,"bus":11,"Pmax":15,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "PV"},
-		{"gen_id":8,"bus":13,"Pmax":15,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "PV"},
-		{"gen_id":9,"bus":26,"Pmax":20,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "WIND"},
-		{"gen_id":10,"bus":29,"Pmax":20,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "WIND"},
-		{"gen_id":11,"bus":30,"Pmax":20,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "WIND"}
+		{"gen_id":7,"bus":11,"Pmax":45,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "PV"},
+		{"gen_id":8,"bus":13,"Pmax":45,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "PV"},
+		{"gen_id":9,"bus":26,"Pmax":30,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "WIND"},
+		{"gen_id":10,"bus":29,"Pmax":30,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "WIND"},
+		{"gen_id":11,"bus":30,"Pmax":30,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "WIND"}
 	],
 	"line": [
 		{"branch_id": 1, "fbus": 1, "tbus": 2, "r": 0.02, "x": 0.06, "b": 0.03, "rating": 130, "status": 1},

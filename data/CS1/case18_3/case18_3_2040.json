@@ -22,11 +22,11 @@
 	],
 	"gen": [
 		{"gen_id":1,"bus":51,"Pmax":100,"Pmin":-100,"Qmax":100,"Qmin":-100,"Vg":1.05,"status":1, "type": "REF"},
-		{"gen_id":2,"bus":8,"Pmax":1.00,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
-		{"gen_id":3,"bus":9,"Pmax":1.00,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
-		{"gen_id":4,"bus":22,"Pmax":1.00,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
-		{"gen_id":5,"bus":24,"Pmax":1.00,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
-		{"gen_id":6,"bus":26,"Pmax":1.00,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"}
+		{"gen_id":2,"bus":8,"Pmax":2.50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
+		{"gen_id":3,"bus":9,"Pmax":2.50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
+		{"gen_id":4,"bus":22,"Pmax":2.50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
+		{"gen_id":5,"bus":24,"Pmax":2.50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
+		{"gen_id":6,"bus":26,"Pmax":2.50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"}
 	],
 	"line": [
 		{"branch_id": 1, "fbus": 1, "tbus": 2, "r": 0.00431, "x": 0.01204, "b": 0.000035, "rating": 12, "status": 1},
@@ -48,5 +48,9 @@
 	],
 	"transformer": [
 		{"branch_id": 16, "fbus": 50, "tbus": 1, "r": 0.00312, "x": 0.06753, "b": 0, "rating": 20, "ratio": 1, "status": 1, "vmag_reg": 1}
+	],
+	"energy_storage": [
+		{"es_id": 1, "bus": 23, "s": 1.00, "e": 2.50, "e_init": 1.25, "e_min": 0.25, "e_max": 2.25, "eff_ch": 0.90, "eff_dch": 0.90, "max_pf": 0.80, "min_pf": 0.80},
+		{"es_id": 2, "bus": 8, "s": 1.00, "e": 2.50, "e_init": 1.25, "e_min": 0.25, "e_max": 2.25, "eff_ch": 0.90, "eff_dch": 0.90, "max_pf": 0.80, "min_pf": 0.80}
 	]
 }
