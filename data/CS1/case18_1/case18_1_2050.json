@@ -50,8 +50,8 @@
 		{"branch_id": 16, "fbus": 50, "tbus": 1, "r": 0.00312, "x": 0.06753, "b": 0, "rating": 20, "ratio": 1, "status": 1, "vmag_reg": 1}
 	],
 	"energy_storage": [
-		{"es_id": 1, "bus": 23, "s": 1.00, "e": 2.50, "e_init": 1.25, "e_min": 0.25, "e_max": 2.25, "eff_ch": 0.90, "eff_dch": 0.90, "max_pf": 0.80, "min_pf": 0.80}
-		{"es_id": 2, "bus": 20, "s": 1.00, "e": 2.50, "e_init": 1.25, "e_min": 0.25, "e_max": 2.25, "eff_ch": 0.90, "eff_dch": 0.90, "max_pf": 0.80, "min_pf": 0.80}
+		{"es_id": 1, "bus": 23, "s": 1.00, "e": 2.50, "e_init": 1.25, "e_min": 0.25, "e_max": 2.25, "eff_ch": 0.90, "eff_dch": 0.90, "max_pf": 0.80, "min_pf": 0.80},
+		{"es_id": 2, "bus": 20, "s": 1.00, "e": 2.50, "e_init": 1.25, "e_min": 0.25, "e_max": 2.25, "eff_ch": 0.90, "eff_dch": 0.90, "max_pf": 0.80, "min_pf": 0.80},
 		{"es_id": 3, "bus": 25, "s": 1.00, "e": 2.50, "e_init": 1.25, "e_min": 0.25, "e_max": 2.25, "eff_ch": 0.90, "eff_dch": 0.90, "max_pf": 0.80, "min_pf": 0.80}
 	]
 }
