@@ -22,8 +22,8 @@
 	],
 	"gen": [
 		{"gen_id":1,"bus":51,"Pmax":100,"Pmin":-100,"Qmax":100,"Qmin":-100,"Vg":1.05,"status":1, "type": "REF"},
-		{"gen_id":5,"bus":24,"Pmax":1,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
-		{"gen_id":6,"bus":26,"Pmax":1,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"}
+		{"gen_id":2,"bus":8,"Pmax":2.50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
+		{"gen_id":3,"bus":9,"Pmax":2.50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"}
 	],
 	"line": [
 		{"branch_id": 1, "fbus": 1, "tbus": 2, "r": 0.00431, "x": 0.01204, "b": 0.000035, "rating": 12, "status": 1},
@@ -40,7 +40,7 @@
 		{"branch_id": 12, "fbus": 21, "tbus": 23, "r": 0.03985, "x": 0.0516, "b": 0.000101, "rating": 2, "status": 1},
 		{"branch_id": 13, "fbus": 23, "tbus": 24, "r": 0.0291, "x": 0.03768, "b": 0.000074, "rating": 1, "status": 1},
 		{"branch_id": 14, "fbus": 23, "tbus": 25, "r": 0.03727, "x": 0.04593, "b": 0.0001, "rating": 2, "status": 1},
-		{"branch_id": 15, "fbus": 25, "tbus": 26, "r": 0.01104, "x": 0.0136, "b": 0.000118, "rating": 1, "status": 1},
+		{"branch_id": 15, "fbus": 25, "tbus": 26, "r": 0.01104, "x": 0.0136, "b": 0.000118, "rating": 0.5, "status": 1},
 		{"branch_id": 17, "fbus": 50, "tbus": 51, "r": 0.0005, "x": 0.00344, "b": 0, "rating": 20, "status": 1}
 	],
 	"transformer": [

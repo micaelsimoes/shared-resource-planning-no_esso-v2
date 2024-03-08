@@ -37,8 +37,8 @@
 	],
 	"gen": [
 		{"gen_id":1,"bus":1,"Pmax":10,"Pmin":0,"Qmax":10,"Qmin":-10,"Vg":1,"status":1, "type": "REF"},
-		{"gen_id":4,"bus":25,"Pmax":0.50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "PV"},
-		{"gen_id":5,"bus":33,"Pmax":0.50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "PV"}
+		{"gen_id":4,"bus":25,"Pmax":1.00,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "PV"},
+		{"gen_id":5,"bus":33,"Pmax":1.00,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1,"status":1, "type": "PV"}
 	],
 	"line": [
 		{"branch_id": 1, "fbus": 1, "tbus": 2, "r": 0.005753, "x": 0.002932, "b": 0, "rating": 10, "status": 1},

@@ -22,8 +22,8 @@
 	],
 	"gen": [
 		{"gen_id":1,"bus":51,"Pmax":100,"Pmin":-100,"Qmax":100,"Qmin":-100,"Vg":1.05,"status":1, "type": "REF"},
-		{"gen_id":5,"bus":24,"Pmax":1,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
-		{"gen_id":6,"bus":26,"Pmax":1,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"}
+		{"gen_id":5,"bus":24,"Pmax":2.50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"},
+		{"gen_id":6,"bus":26,"Pmax":2.50,"Pmin":0,"Qmax":0,"Qmin":0,"Vg":1.05,"status":1, "type": "PV"}
 	],
 	"line": [
 		{"branch_id": 1, "fbus": 1, "tbus": 2, "r": 0.00431, "x": 0.01204, "b": 0.000035, "rating": 12, "status": 1},
