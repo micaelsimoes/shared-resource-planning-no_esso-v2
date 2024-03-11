@@ -61,10 +61,10 @@ def shared_resources_planning(working_directory, specification_filename):
     planning_problem.read_planning_problem()
     #planning_problem.plot_diagram()
 
-    candidate_solution = planning_problem.get_initial_candidate_solution()
-    planning_problem.run_operational_planning(candidate_solution=candidate_solution)
+    #candidate_solution = planning_problem.get_initial_candidate_solution()
+    #planning_problem.run_operational_planning(candidate_solution=candidate_solution)
 
-    #planning_problem.run_planning_problem()
+    planning_problem.run_planning_problem()
     #candidate_solution = planning_problem.get_initial_candidate_solution()
     #planning_problem.run_operational_planning(candidate_solution=candidate_solution)
     #planning_problem.run_without_coordination()
