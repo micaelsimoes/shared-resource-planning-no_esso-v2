@@ -17,6 +17,26 @@
 			"name": "case18_1",
 			"params_file": "case18_params.json",
 			"connection_node_id": 24
+		},
+		{
+			"name": "case18_2",
+			"params_file": "case18_params.json",
+			"connection_node_id": 16
+		},
+		{
+			"name": "case18_3",
+			"params_file": "case18_params.json",
+			"connection_node_id": 18
+		},
+		{
+			"name": "case33_1",
+			"params_file": "case33_params.json",
+			"connection_node_id": 26
+		},
+		{
+			"name": "case33_2",
+			"params_file": "case33_params.json",
+			"connection_node_id": 3
 		}
 	],
 	"TransmissionNetwork": {
