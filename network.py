@@ -1247,7 +1247,10 @@ def _run_smopf(network, model, params, from_warm_start=False):
         solver.options['max_iter'] = 10000
         solver.options['linear_solver'] = params.solver_params.linear_solver
 
-    result = solver.solve(model, tee=params.solver_params.verbose)
+    if from_warm_start:
+        result = solver.solve(model, warmstart=from_warm_start, tee=params.solver_params.verbose)
+    else:
+        result = solver.solve(model, tee=params.solver_params.verbose)
 
     '''
     import logging

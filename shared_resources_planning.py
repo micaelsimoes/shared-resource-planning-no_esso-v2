@@ -943,10 +943,12 @@ def update_distribution_models_to_admm(distribution_networks, models, initial_in
             for day in distribution_network.days:
 
                 init_of_value = pe.value(dso_model[year][day].objective)
-                rating = distribution_network.network[year][day].shared_energy_storages[0].s
-                if rating == 0.0:
-                    rating = 1.00                # Do not balance residuals
+                if isclose(init_of_value, 0.00, abs_tol=0.01):                # Do not balance residuals
                     init_of_value = 1.00
+
+                rating = distribution_network.network[year][day].shared_energy_storages[0].s
+                if isclose(rating, 0.00, abs_tol=0.01):                # Do not balance residuals
+                    rating = 1.00
 
                 ref_node_id = distribution_network.network[year][day].get_reference_node_id()
                 ref_node_idx = distribution_network.network[year][day].get_node_idx(ref_node_id)
