@@ -111,6 +111,11 @@ class SharedResourcesPlanning:
     def plot_diagram(self):
         _plot_networkx_diagram(self)
 
+    def write_planning_results_to_excel(self, operational_planning_models, operational_results=dict(), bound_evolution=dict(), execution_time='N/A'):
+        filename = self.filename.replace('.txt', '') + '_planning_results'
+        processed_results = _process_operational_planning_results(self, operational_planning_models['tso'], operational_planning_models['dso'], operational_results)
+        _write_planning_results_to_excel(self, processed_results, bound_evolution, filename)
+
     def write_operational_planning_results_to_excel(self, optimization_models, results, primal_evolution=list()):
         filename = os.path.join(self.results_dir, self.name + '_operational_planning_results.xlsx')
         processed_results = _process_operational_planning_results(self, optimization_models['tso'], optimization_models['dso'], results)
@@ -179,8 +184,6 @@ def _run_planning_problem(planning_problem):
         lower_bound = pe.value(master_problem_model.alpha)
         lower_bound_evolution.append(lower_bound)
 
-
-
     if not convergence:
         print('[WARNING] Convergence not obtained!')
 
@@ -190,6 +193,7 @@ def _run_planning_problem(planning_problem):
     end = time.time()
     total_execution_time = end - start
     bound_evolution = {'lower_bound': lower_bound_evolution, 'upper_bound': upper_bound_evolution}
+    planning_problem.write_planning_results_to_excel(lower_level_models, operational_results, bound_evolution, execution_time=total_execution_time)
 
 
 def _add_benders_cut(planning_problem, model, upper_bound, sensitivities, candidate_solution):
@@ -1482,6 +1486,46 @@ def _process_results_interface_power_flow(planning_problem, tso_model, dso_model
 # ======================================================================================================================
 #  RESULTS WRITE functions
 # ======================================================================================================================
+def _write_planning_results_to_excel(planning_problem, results, bound_evolution=dict(), filename='planing_results'):
+
+    wb = Workbook()
+
+    _write_operational_planning_main_info_to_excel(planning_problem, wb, results)
+    _write_shared_ess_specifications(wb, planning_problem.shared_ess_data)
+
+    if bound_evolution:
+        _write_bound_evolution_to_excel(wb, bound_evolution)
+
+    # Interface Power Flow
+    _write_interface_power_flow_results_to_excel(planning_problem, wb, results['interface'])
+
+    # Shared Energy Storages results
+    _write_shared_energy_storages_results_to_excel(planning_problem, wb, results)
+
+    #  TSO and DSOs' results
+    _write_network_voltage_results_to_excel(planning_problem, wb, results)
+    _write_network_consumption_results_to_excel(planning_problem, wb, results)
+    _write_network_generation_results_to_excel(planning_problem, wb, results)
+    _write_network_branch_results_to_excel(planning_problem, wb, results, 'losses')
+    _write_network_branch_results_to_excel(planning_problem, wb, results, 'ratio')
+    _write_network_branch_results_to_excel(planning_problem, wb, results, 'current_perc')
+    _write_network_branch_power_flow_results_to_excel(planning_problem, wb, results)
+    _write_network_energy_storages_results_to_excel(planning_problem, wb, results)
+    _write_relaxation_slacks_results_to_excel(planning_problem, wb, results)
+
+    results_filename = os.path.join(planning_problem.results_dir, filename + '.xlsx')
+    try:
+        wb.save(results_filename)
+        print(f'[INFO] ESS Optimization Results written to {results_filename}.')
+    except:
+        from datetime import datetime
+        now = datetime.now()
+        current_time = now.strftime("%Y-%m-%d_%H-%M-%S")
+        backup_filename = os.path.join(planning_problem.results_dir, f'{filename}_{current_time}.xlsx')
+        print(f'[INFO] ESS Optimization Results written to {backup_filename}.')
+        wb.save(backup_filename)
+
+
 def _write_operational_planning_results_to_excel(planning_problem, results, primal_evolution=list(), filename='operation_planning_results'):
 
     wb = Workbook()
@@ -1794,6 +1838,43 @@ def _write_shared_ess_specifications(workbook, shared_ess_info):
             sheet.cell(row=row_idx, column=3).number_format = decimal_style
             sheet.cell(row=row_idx, column=4).value = shared_ess.e
             sheet.cell(row=row_idx, column=4).number_format = decimal_style
+
+
+def _write_bound_evolution_to_excel(workbook, bound_evolution):
+
+    sheet = workbook.create_sheet('Convergence Characteristic')
+
+    lower_bound = bound_evolution['lower_bound']
+    upper_bound = bound_evolution['upper_bound']
+    num_lines = max(len(upper_bound), len(lower_bound))
+
+    num_style = '0.00'
+
+    # Write header
+    line_idx = 1
+    sheet.cell(row=line_idx, column=1).value = 'Iteration'
+    sheet.cell(row=line_idx, column=2).value = 'Lower Bound, [NPV Mm.u.]'
+    sheet.cell(row=line_idx, column=3).value = 'Upper Bound, [NPV Mm.u.]'
+
+    # Iterations
+    line_idx = 2
+    for i in range(num_lines):
+        sheet.cell(row=line_idx, column=1).value = i
+        line_idx += 1
+
+    # Lower bound
+    line_idx = 2
+    for value in lower_bound:
+        sheet.cell(row=line_idx, column=2).value = value / 1e6
+        sheet.cell(row=line_idx, column=2).number_format = num_style
+        line_idx += 1
+
+    # Upper bound
+    line_idx = 2
+    for value in upper_bound:
+        sheet.cell(row=line_idx, column=3).value = value / 1e6
+        sheet.cell(row=line_idx, column=3).number_format = num_style
+        line_idx += 1
 
 
 def _write_objective_function_evolution_to_excel(workbook, primal_evolution):
