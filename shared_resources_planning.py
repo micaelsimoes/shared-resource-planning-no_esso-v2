@@ -945,6 +945,8 @@ def update_distribution_models_to_admm(distribution_networks, models, initial_in
         for year in distribution_network.years:
             for day in distribution_network.days:
 
+                s_base = distribution_network.network[year][day].baseMVA
+
                 init_of_value = 1.00
                 if distribution_network.params.obj_type == OBJ_MIN_COST:
                     init_of_value = pe.value(dso_model[year][day].objective)
@@ -991,7 +993,6 @@ def update_distribution_models_to_admm(distribution_networks, models, initial_in
                 obj = dso_model[year][day].objective.expr / max(abs(init_of_value), 1.00)
 
                 # Augmented Lagrangian -- Interface power flow (residual balancing)
-                s_base = distribution_network.network[year][day].baseMVA
                 for p in dso_model[year][day].periods:
                     init_p = abs(initial_interface_pf[node_id][year][day]['p'][p]) / s_base
                     init_q = abs(initial_interface_pf[node_id][year][day]['q'][p]) / s_base
