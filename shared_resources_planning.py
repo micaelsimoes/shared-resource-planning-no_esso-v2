@@ -762,9 +762,9 @@ def update_transmission_model_to_admm(transmission_network, model, initial_inter
             obj = model[year][day].objective.expr / abs(init_of_value)
             for dn in model[year][day].active_distribution_networks:
                 node_id = transmission_network.active_distribution_network_nodes[dn]
-                init_p = max([abs(value) for value in initial_interface_pf['dso'][node_id][year][day]['p']]) / s_base
-                init_q = max([abs(value) for value in initial_interface_pf['dso'][node_id][year][day]['q']]) / s_base
                 for p in model[year][day].periods:
+                    init_p = abs(initial_interface_pf['dso'][node_id][year][day]['p'][p]) / s_base
+                    init_q = abs(initial_interface_pf['dso'][node_id][year][day]['q'][p]) / s_base
                     constraint_p_req = (model[year][day].expected_interface_pf_p[dn, p] - model[year][day].p_pf_req[dn, p]) / init_p
                     constraint_q_req = (model[year][day].expected_interface_pf_q[dn, p] - model[year][day].q_pf_req[dn, p]) / init_q
                     obj += model[year][day].dual_pf_p[dn, p] * constraint_p_req
@@ -989,9 +989,9 @@ def update_distribution_models_to_admm(distribution_networks, models, initial_in
 
                 # Augmented Lagrangian -- Interface power flow (residual balancing)
                 s_base = distribution_network.network[year][day].baseMVA
-                init_p = max([abs(value) for value in initial_interface_pf[node_id][year][day]['p']]) / s_base
-                init_q = max([abs(value) for value in initial_interface_pf[node_id][year][day]['q']]) / s_base
                 for p in dso_model[year][day].periods:
+                    init_p = abs(initial_interface_pf[node_id][year][day]['p'][p]) / s_base
+                    init_q = abs(initial_interface_pf[node_id][year][day]['q'][p]) / s_base
                     constraint_p_req = (dso_model[year][day].expected_interface_pf_p[p] - dso_model[year][day].p_pf_req[p]) / abs(init_p)
                     constraint_q_req = (dso_model[year][day].expected_interface_pf_q[p] - dso_model[year][day].q_pf_req[p]) / abs(init_q)
                     obj += (dso_model[year][day].dual_pf_p[p]) * (constraint_p_req)
