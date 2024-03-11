@@ -112,7 +112,7 @@ class SharedResourcesPlanning:
         _plot_networkx_diagram(self)
 
     def write_planning_results_to_excel(self, operational_planning_models, operational_results=dict(), bound_evolution=dict(), execution_time='N/A'):
-        filename = self.filename.replace('.txt', '') + '_planning_results'
+        filename = os.path.join(self.results_dir, self.name + '_planning_results.xlsx')
         processed_results = _process_operational_planning_results(self, operational_planning_models['tso'], operational_planning_models['dso'], operational_results)
         _write_planning_results_to_excel(self, processed_results, bound_evolution, filename)
 
