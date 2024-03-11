@@ -723,7 +723,10 @@ def update_transmission_model_to_admm(transmission_network, model, initial_inter
     for year in transmission_network.years:
         for day in transmission_network.days:
 
-            init_of_value = pe.value(model[year][day].objective)
+            init_of_value = 1.00
+            if transmission_network.params.obj_type == OBJ_MIN_COST:
+                init_of_value = pe.value(model[year][day].objective)
+
             s_base = transmission_network.network[year][day].baseMVA
 
             # Free Pc and Qc at the connection point with distribution networks
@@ -774,7 +777,7 @@ def update_transmission_model_to_admm(transmission_network, model, initial_inter
 
             for e in model[year][day].active_distribution_networks:
                 rating = transmission_network.network[year][day].shared_energy_storages[e].s
-                if rating == 0.0:
+                if isclose(rating, 0.00, abs_tol=1e-3/s_base):
                     rating = 1.00       # Do not balance residuals
                 for p in model[year][day].periods:
                     constraint_ess_p = (model[year][day].expected_shared_ess_p[e, p] - model[year][day].p_ess_req[e, p]) / (2 * rating)
@@ -942,12 +945,12 @@ def update_distribution_models_to_admm(distribution_networks, models, initial_in
         for year in distribution_network.years:
             for day in distribution_network.days:
 
-                init_of_value = pe.value(dso_model[year][day].objective)
-                if isclose(init_of_value, 0.00, abs_tol=0.01):                # Do not balance residuals
-                    init_of_value = 1.00
+                init_of_value = 1.00
+                if distribution_network.params.obj_type == OBJ_MIN_COST:
+                    init_of_value = pe.value(dso_model[year][day].objective)
 
                 rating = distribution_network.network[year][day].shared_energy_storages[0].s
-                if isclose(rating, 0.00, abs_tol=0.01):                # Do not balance residuals
+                if isclose(rating, 0.00, abs_tol=1e-3/s_base):                # Do not balance residuals
                     rating = 1.00
 
                 ref_node_id = distribution_network.network[year][day].get_reference_node_id()
