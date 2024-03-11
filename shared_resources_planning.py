@@ -1513,16 +1513,15 @@ def _write_planning_results_to_excel(planning_problem, results, bound_evolution=
     _write_network_energy_storages_results_to_excel(planning_problem, wb, results)
     _write_relaxation_slacks_results_to_excel(planning_problem, wb, results)
 
-    results_filename = os.path.join(planning_problem.results_dir, filename + '.xlsx')
+    # Save results
     try:
-        wb.save(results_filename)
-        print(f'[INFO] ESS Optimization Results written to {results_filename}.')
+        wb.save(filename)
     except:
         from datetime import datetime
         now = datetime.now()
         current_time = now.strftime("%Y-%m-%d_%H-%M-%S")
         backup_filename = os.path.join(planning_problem.results_dir, f'{filename}_{current_time}.xlsx')
-        print(f'[INFO] ESS Optimization Results written to {backup_filename}.')
+        print(f"[WARNING] Results saved to file {backup_filename}.xlsx")
         wb.save(backup_filename)
 
 
