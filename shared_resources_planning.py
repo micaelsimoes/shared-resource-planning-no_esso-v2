@@ -140,8 +140,8 @@ def _run_planning_problem(planning_problem):
     # 0. Initialization
     iter = 1
     convergence = False
-    lower_bound = -shared_ess_parameters.budget * 1e3
-    upper_bound = shared_ess_parameters.budget * 1e3
+    lower_bound = -1e12
+    upper_bound = 1e12
     lower_bound_evolution = [lower_bound]
     upper_bound_evolution = [upper_bound]
     candidate_solution = planning_problem.get_initial_candidate_solution()
@@ -200,16 +200,15 @@ def _add_benders_cut(planning_problem, model, upper_bound, sensitivities, candid
     years = [year for year in planning_problem.years]
     benders_cut = upper_bound
     for e in model.energy_storages:
+        node_id = planning_problem.active_distribution_network_nodes[e]
         for y in model.years:
             year = years[y]
-            node_id = planning_problem.active_distribution_network_nodes[e]
             sensitivity_s = 0.00
             sensitivity_e = 0.00
-            for day in planning_problem.days:
-                sensitivity_s += sensitivities['s'][year][node_id] * (planning_problem.days[day] / 365.00)
-                sensitivity_e += sensitivities['e'][year][node_id] * (planning_problem.days[day] / 365.00)
-            benders_cut += sensitivity_s * (model.es_s_rated[e, y] - candidate_solution['total_capacity'][node_id][year]['s'])
-            benders_cut += sensitivity_e * (model.es_e_rated[e, y] - candidate_solution['total_capacity'][node_id][year]['e'])
+            if sensitivities['s'][year][node_id] != 'N/A':
+                benders_cut += sensitivities['s'][year][node_id] * (model.es_s_rated[e, y] - candidate_solution['total_capacity'][year][node_id]['s'])
+            if sensitivities['e'][year][node_id] != 'N/A':
+                benders_cut += sensitivities['e'][year][node_id] * (model.es_e_rated[e, y] - candidate_solution['total_capacity'][year][node_id]['e'])
     model.benders_cuts.add(model.alpha >= benders_cut)
 
 
