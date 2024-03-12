@@ -66,7 +66,7 @@ class NetworkData:
                 for c in model_repr_day.shared_energy_storage_s_sensitivities:
                     node_id = self.active_distribution_network_nodes[c-1]         # Note: the sensitivity constraints start at "1"
                     if results_repr_day.solver.status == po.SolverStatus.ok:
-                        sensitivity_s = model_repr_day.dual[model_repr_day.shared_energy_storage_s_sensitivities[c]]
+                        sensitivity_s = model_repr_day.dual[model_repr_day.shared_energy_storage_s_sensitivities[c]] * self.network[year][day].baseMVA
                         if sensitivities['s'][year][node_id] == 'N/A':
                             sensitivities['s'][year][node_id] = num_days * sensitivity_s
                         else:
@@ -74,7 +74,7 @@ class NetworkData:
                 for c in model_repr_day.shared_energy_storage_e_sensitivities:
                     node_id = self.active_distribution_network_nodes[c-1]         # Note: the sensitivity constraints start at "1"
                     if results_repr_day.solver.status == po.SolverStatus.ok:
-                        sensitivity_e = model_repr_day.dual[model_repr_day.shared_energy_storage_e_sensitivities[c]]
+                        sensitivity_e = model_repr_day.dual[model_repr_day.shared_energy_storage_e_sensitivities[c]] * self.network[year][day].baseMVA
                         if sensitivities['e'][year][node_id] == 'N/A':
                             sensitivities['e'][year][node_id] = num_days * sensitivity_e
                         else:
