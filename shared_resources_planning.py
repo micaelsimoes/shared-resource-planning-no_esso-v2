@@ -194,6 +194,7 @@ def _run_planning_problem(planning_problem):
     # Write results
     end = time.time()
     total_execution_time = end - start
+    print('[INFO] Execution time: {:.2f} s'.format(total_execution_time))
     bound_evolution = {'lower_bound': lower_bound_evolution, 'upper_bound': upper_bound_evolution}
     planning_problem.write_planning_results_to_excel(lower_level_models, operational_results, bound_evolution, execution_time=total_execution_time)
 
