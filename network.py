@@ -725,8 +725,8 @@ def _build_model(network, params):
                     model.shared_energy_storage_day_balance.add(model.shared_es_soc[e, s_m, s_o, len(model.periods) - 1] - soc_final >= -SMALL_TOLERANCE)
                     model.shared_energy_storage_day_balance.add(model.shared_es_soc[e, s_m, s_o, len(model.periods) - 1] - soc_final <= SMALL_TOLERANCE)
 
-        model.shared_energy_storage_s_sensitivities.add(model.shared_es_s_rated[e] - (model.shared_es_s_slack_up[e] - model.shared_es_s_slack_down[e]) == model.shared_es_s_rated_fixed[e])
-        model.shared_energy_storage_e_sensitivities.add(model.shared_es_e_rated[e] - (model.shared_es_e_slack_up[e] - model.shared_es_e_slack_down[e]) == model.shared_es_e_rated_fixed[e])
+        model.shared_energy_storage_s_sensitivities.add(model.shared_es_s_rated[e] + model.shared_es_s_slack_up[e] - model.shared_es_s_slack_down[e] == model.shared_es_s_rated_fixed[e])
+        model.shared_energy_storage_e_sensitivities.add(model.shared_es_e_rated[e] + model.shared_es_e_slack_up[e] - model.shared_es_e_slack_down[e] == model.shared_es_e_rated_fixed[e])
 
     # - Node Balance constraints
     model.node_balance_cons_p = pe.ConstraintList()
