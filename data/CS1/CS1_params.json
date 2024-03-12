@@ -1,11 +1,11 @@
 {
 	"benders": {
 		"tol_abs": 1e3,
-		"tol_rel": 0.1e-2,
+		"tol_rel": 1e-2,
 		"num_max_iters": 1000
 	},
 	"admm": {
-		"tol": 5e-3,
+		"tol": 1e-2,
 		"num_max_iters": 100,
 		"adaptive_penalty": true,
 		"rho": {
