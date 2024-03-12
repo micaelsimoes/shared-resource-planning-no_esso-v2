@@ -164,6 +164,8 @@ def _run_planning_problem(planning_problem):
         operational_results, lower_level_models, sensitivities, _ = planning_problem.run_operational_planning(candidate_solution, print_results=False)
         upper_bound = planning_problem.get_upper_bound(lower_level_models['tso'])
         upper_bound_evolution.append(upper_bound)
+        print(f'upper bound = {upper_bound}')
+        print(f'sensitivities = {sensitivities}')
         print('[INFO] Estimated cost: {:.6f}'.format(upper_bound))
 
         #  - Convergence check
