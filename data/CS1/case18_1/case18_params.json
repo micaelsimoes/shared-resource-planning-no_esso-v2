@@ -1,5 +1,5 @@
 {
-	"obj_type": "CONGESTION_MANAGEMENT",
+	"obj_type": "COST",
 	"transf_reg": true,
 	"es_reg": true,
 	"fl_reg": true,
