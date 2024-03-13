@@ -164,9 +164,6 @@ def _run_planning_problem(planning_problem):
         operational_results, lower_level_models, sensitivities, _ = planning_problem.run_operational_planning(candidate_solution, print_results=False)
         upper_bound = planning_problem.get_upper_bound(lower_level_models['tso'])
         upper_bound_evolution.append(upper_bound)
-        print(f'upper bound = {upper_bound}')
-        print(f'sensitivities = {sensitivities}')
-        print('[INFO] Estimated cost: {:.6f}'.format(upper_bound))
 
         #  - Convergence check
         if isclose(upper_bound, lower_bound, abs_tol=benders_parameters.tol_abs, rel_tol=benders_parameters.tol_rel):
@@ -397,7 +394,7 @@ def _run_operational_planning_problem(operational_planning_problem):
 
     end = time.time()
     total_execution_time = end - start
-    print('[INFO] \t - Total execution time: {:.2f}s.'.format(total_execution_time))
+    print('[INFO] \t - Execution time: {:.2f} s'.format(total_execution_time))
 
     optim_models = {'tso': tso_model, 'dso': dso_models}
     sensitivities = transmission_network.get_sensitivities(tso_model, results['tso'])
