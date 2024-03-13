@@ -1817,7 +1817,7 @@ def _write_shared_network_energy_storage_results_to_excel(network_planning, work
                             soc_perc = results[year][day]['scenarios'][s_m][s_o]['shared_energy_storages']['soc_percent'][node_id][p]
                             sheet.cell(row=row_idx, column=p + 7).value = soc_perc
                             sheet.cell(row=row_idx, column=p + 7).number_format = perc_style
-                            if soc != 'N/A':
+                            if soc_perc != 'N/A':
                                 expected_soc_perc[node_id][p] += soc_perc * omega_m * omega_s
                             else:
                                 expected_soc_perc[node_id][p] = 'N/A'
