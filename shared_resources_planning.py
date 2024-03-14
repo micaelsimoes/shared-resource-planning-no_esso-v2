@@ -1037,7 +1037,7 @@ def update_distribution_coordination_models_and_solve(distribution_networks, mod
                 rho_ess = params.rho['ess'][distribution_network.name]
                 if params.adaptive_penalty:
                     rho_pf = pe.value(model[year][day].rho_pf) * (1 + ADMM_ADAPTIVE_PENALTY_FACTOR)
-                    rho_ess = pe.value(model[year][day].rho_pf) * (1 + ADMM_ADAPTIVE_PENALTY_FACTOR)
+                    rho_ess = pe.value(model[year][day].rho_ess) * (1 + ADMM_ADAPTIVE_PENALTY_FACTOR)
 
                 model[year][day].rho_pf.fix(rho_pf)
                 model[year][day].rho_ess.fix(rho_ess)
