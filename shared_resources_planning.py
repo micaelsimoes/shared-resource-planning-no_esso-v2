@@ -171,13 +171,12 @@ def _run_planning_problem(planning_problem):
             convergence = True
             break
         else:
-            if iter > 1:
-                previous_upper_bound = upper_bound_evolution[-1]
-                previous_lower_bound = lower_bound_evolution[-1]
-                if isclose(upper_bound, previous_upper_bound, abs_tol=benders_parameters.tol_abs, rel_tol=benders_parameters.tol_rel) and \
-                   isclose(upper_bound, previous_lower_bound, abs_tol=benders_parameters.tol_abs, rel_tol=benders_parameters.tol_rel):
-                    convergence = True
-                    break
+            previous_upper_bound = upper_bound_evolution[-1]
+            previous_lower_bound = lower_bound_evolution[-1]
+            if isclose(upper_bound, previous_upper_bound, abs_tol=benders_parameters.tol_abs, rel_tol=benders_parameters.tol_rel) and \
+               isclose(upper_bound, previous_lower_bound, abs_tol=benders_parameters.tol_abs, rel_tol=benders_parameters.tol_rel):
+                convergence = True
+                break
 
         iter += 1
 
