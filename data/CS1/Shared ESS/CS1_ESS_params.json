@@ -2,7 +2,7 @@
 	"budget": 2.5e6,
 	"max_capacity": 2.50,
 	"min_pe_factor": 0.10,
-	"max_pe_factor": 4.00,
+	"max_pe_factor": 1.00,
 	"ess_relax": false,
 	"plot_results": false,
 	"print_results_to_file": true,

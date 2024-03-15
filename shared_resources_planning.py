@@ -277,7 +277,6 @@ def _build_master_problem(planning_problem):
         for y in model.years:
             model.energy_storage_power_to_energy_factor.add(model.es_s_rated[e, y] >= model.es_e_rated[e, y] * shared_ess_data.params.min_pe_factor)
             model.energy_storage_power_to_energy_factor.add(model.es_s_rated[e, y] <= model.es_e_rated[e, y] * shared_ess_data.params.max_pe_factor)
-            model.energy_storage_power_to_energy_factor.add(model.es_s_rated[e, y] <= model.es_e_rated[e, y] * ENERGY_STORAGE_CHARGE_DISCHARGE_LIMIT_INSTANT)
 
     # - Maximum Investment Cost
     investment_cost_total = 0.0
