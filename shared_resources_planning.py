@@ -166,7 +166,8 @@ def _run_planning_problem(planning_problem):
         upper_bound_evolution.append(upper_bound)
 
         #  - Convergence check
-        if isclose(upper_bound, lower_bound, abs_tol=benders_parameters.tol_abs, rel_tol=benders_parameters.tol_rel):
+        if isclose(upper_bound, lower_bound, abs_tol=benders_parameters.tol_abs, rel_tol=benders_parameters.tol_rel) or\
+            lower_bound > upper_bound:
             lower_bound_evolution.append(lower_bound)
             convergence = True
             break
@@ -175,6 +176,7 @@ def _run_planning_problem(planning_problem):
             previous_lower_bound = lower_bound_evolution[-1]
             if isclose(upper_bound, previous_upper_bound, abs_tol=benders_parameters.tol_abs, rel_tol=benders_parameters.tol_rel) and \
                isclose(upper_bound, previous_lower_bound, abs_tol=benders_parameters.tol_abs, rel_tol=benders_parameters.tol_rel):
+                lower_bound_evolution.append(lower_bound)
                 convergence = True
                 break
 
